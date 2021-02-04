@@ -31,8 +31,8 @@ class main_gui(QMainWindow):
         self.servo_1 = servo_thread(self, pi, 800, 1, [500, 1400]) # MORE IS DOWN
         self.servo_2 = servo_thread(self, pi, 1700, 2, [500, 2500]) # MORE IS DOWN
         self.servo_3 = servo_thread(self, pi, 1000, 3, [500, 2500]) # MORE IS UP
-        self.servo_4 = servo_thread(self, pi, 2500, 4, [500, 2500]) # MORE IS RIGHT
-        self.servo_5 = servo_thread(self, pi, 1500, 5, [1200, 2500]) # MORE IS WIDER
+        self.servo_4 = servo_thread(self, pi, 1500, 4, [500, 2500]) # MORE IS RIGHT
+        self.servo_5 = servo_thread(self, pi, 1500, 5, [1300, 2500]) # MORE IS WIDER
 
         self.resize(700, 700)
         self.build()
@@ -53,8 +53,13 @@ class main_gui(QMainWindow):
         # CONTROLLER CONNECTION
         self.controller.messager.claw_move.connect(self.move_claw)
         self.controller.messager.claw_stop.connect(self.stop_claw)
+        self.controller.messager.claw_rotation.connect(self.rotate_claw)
+        self.controller.messager.claw_rotation_stop.connect(self.stop_claw_rotation)
+        self.controller.messager.claw_y_move.connect(self.move_y_claw)
+        self.controller.messager.claw_y_stop.connect(self.stop_y_claw)
+        self.controller.messager.robot_rotation.connect(self.rotation_robot)
+        self.controller.messager.robot_rotation_stop.connect(self.stop_rotation_robot)
     
-
 
     def build(self):
         self.setCentralWidget(self.widget_central)
@@ -114,8 +119,8 @@ class main_gui(QMainWindow):
         self.servo_1.quick_movement(900)
         self.servo_2.quick_movement(2000)
         self.servo_3.quick_movement(800)
-        self.servo_4.quick_movement(2500)
-        self.servo_5.quick_movement(1200)
+        self.servo_4.quick_movement(1500)
+        self.servo_5.quick_movement(1300)
         sleep(1)
 
         self.servo_0.cancel()
@@ -124,9 +129,48 @@ class main_gui(QMainWindow):
         self.servo_3.cancel()
         self.servo_4.cancel()
         self.servo_5.cancel()
-
+    
+    # XBOX CONTROLLER MOVEMENTS
     def move_claw(self, action):
         self.servo_5.movement(action)
     
     def stop_claw(self):
         self.servo_5.servo_running = False
+        self.calc_arm_position()
+
+    def rotate_claw(self, action):
+        self.servo_4.movement(action)
+    
+    def stop_claw_rotation(self):
+        self.servo_4.servo_running = False
+        self.calc_arm_position()
+
+    def move_y_claw(self, action):
+        self.servo_3.movement(action)
+
+    def stop_y_claw(self):
+        self.servo_3.servo_running = False
+        self.calc_arm_position()
+
+    def rotation_robot(self, action):
+        print("ROTATION ACTION " + str(action))
+        self.servo_0.movement(action)
+
+    def stop_rotation_robot(self):
+        self.servo_0.servo_running = False
+        self.calc_arm_position()
+
+    def calc_arm_position(self):
+        test = 0
+        # SERVO1:
+        # width 500 = 90°
+        # width 1400 = 0°
+        # SERVO2:
+        # width 500 = 180°si
+        # width 1400 = 90°
+
+        #widht_1 = self.servo_1.servo_position
+        #widht_2 = self.servo_3.servo_position
+
+        #print("widht1 " + str(widht_1))
+        #print("widht2 " + str(widht_2))

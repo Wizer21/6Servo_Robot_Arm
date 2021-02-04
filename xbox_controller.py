@@ -6,6 +6,12 @@ from evdev import*
 class Communication(QObject):
     claw_move = pyqtSignal(int)
     claw_stop = pyqtSignal()
+    claw_rotation = pyqtSignal(int)
+    claw_rotation_stop = pyqtSignal()
+    claw_y_move = pyqtSignal(int)
+    claw_y_stop = pyqtSignal()
+    robot_rotation = pyqtSignal(int)
+    robot_rotation_stop = pyqtSignal()
 
 class xbox_controller(QThread):
     def __init__(self):
@@ -46,57 +52,63 @@ class xbox_controller(QThread):
 
     def run(self):
         for event in self.gamepad.read_loop():
+            val_button = int(event.value)
+            code_button = int(event.code)
             #BUTTON
-            if event.type == ecodes.EV_KEY: 
-                val_button = int(event.value)
-                code_button = int(event.code)
-
+            if event.type == ecodes.EV_KEY:             
                 if code_button == 309: # RB
                     if val_button == 0:
-                        self.messager.claw_stop.emit()
+                        self.messager.claw_rotation_stop.emit()
                     else:
-                        self.messager.claw_move.emit(10)
+                        self.messager.claw_rotation.emit(10)
                 elif code_button == 308: # LB
                     if val_button == 0:
-                        self.messager.claw_stop.emit()
+                        self.messager.claw_rotation_stop.emit()
                     else:
-                        self.messager.claw_move.emit(-10)
+                        self.messager.claw_rotation.emit(-10)
+
 
             #JOYSTICK
             elif event.type == ecodes.EV_ABS: 
                 # JOY 1
-                if event.code == self.joy1_x:
-                    self.joy1_position[0] = int(event.value)
-                    print("JOY 1: X " + str(self.joy1_position[0]) + " Y " + str(self.joy1_position[1]))
+                if code_button == self.joy1_x:
+                    if not 29767.5 < val_button < 35767.5:
+                        if val_button < 32767.5:
+                            self.messager.robot_rotation.emit(-round((val_button - 32767.5) / 3276.75))
+                        else:
+                            self.messager.robot_rotation.emit(round((32767.5 - val_button) / 3276.75))
+                    else:
+                        self.messager.robot_rotation_stop.emit()
 
-                elif event.code == self.joy1_y: 
+                elif code_button == self.joy1_y: 
                     self.joy1_position[1] = int(event.value)
-                    print("JOY 1: X " + str(self.joy1_position[0]) + " Y " + str(self.joy1_position[1]))
 
                 # JOY 2
-                elif event.code == self.joy2_x:
-                    self.joy2_position[0] = int(event.value)
-                    print("JOY 2: X " + str(self.joy2_position[0]) + " Y " + str(self.joy2_position[1]))
+                elif code_button == self.joy2_x:
+                    if not 29767.5 < val_button < 35767.5:
+                        if val_button < 32767.5:
+                            self.messager.robot_rotation.emit(-round((val_button - 32767.5) / 3276.75))
+                        else:
+                            self.messager.robot_rotation.emit(round((32767.5 - val_button) / 3276.75))
+                    else:
+                        self.messager.robot_rotation_stop.emit()
 
-                if event.code == self.joy2_y: 
+                if code_button == self.joy2_y: 
                     self.joy2_position[1] = int(event.value)
-                    print("JOY 2: X " + str(self.joy2_position[0]) + " Y " + str(self.joy2_position[1]))
 
                 # DIRECTIONAL BUTTON AXIS Y
-                elif event.code == self.directionnal_button_y:  
+                elif code_button == self.directionnal_button_y:  
                     pos = int(str(event.value).replace("L", ""))
                     if pos > 0:
-                        print("Down pressed")
-                        self.holded_button = "Down"
+                        self.messager.claw_y_move.emit(-10)
                     elif pos < 0:
-                        print("Up pressed")
-                        self.holded_button = "Up"
+                        self.messager.claw_y_move.emit(10)
                     elif pos == 0:
-                        print(self.holded_button + " released")
+                        self.messager.claw_y_stop.emit()
 
                 # DIRECTIONAL BUTTON AXIS X
-                elif event.code == self.directionnal_button_x:
-                    pos = int(str(event.value).replace("L", ""))
+                elif code_button == self.directionnal_button_x:
+                    pos = int(str(val_button).replace("L", ""))
                     if pos > 0:
                         print("Right pressed")
                         self.holded_button = "Right"
@@ -105,10 +117,14 @@ class xbox_controller(QThread):
                         self.holded_button = "Left"
                     elif pos == 0:
                         print(self.holded_button + " released")
-
-                elif event.code == self.lt:
-                    print("LT pressed at " + str(event.value))
                 
-                elif event.code == self.rt:
-                    print("self.RT pressed at " + str(event.value))
-  
+                elif code_button == self.rt: # RT
+                    if val_button == 0:
+                        self.messager.claw_stop.emit()
+                    else:
+                        self.messager.claw_move.emit(round(val_button / 102.6))
+                elif code_button == self.lt: # LT                    
+                    if val_button == 0:
+                        self.messager.claw_stop.emit()
+                    else:
+                        self.messager.claw_move.emit(-round(val_button / 102.6))
