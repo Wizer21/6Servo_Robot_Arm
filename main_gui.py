@@ -3,12 +3,15 @@ from PyQt5.QtGui import*
 from PyQt5.QtCore import*
 from servo_thread import*
 from time import sleep
+from xbox_controller import*
 
 class main_gui(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.pi = pigpio.pi()
+        self.controller = xbox_controller()
 
+        # WIDGETS
         self.widget_central = QWidget(self)
         self.layout_main = QGridLayout(self)
 
@@ -22,6 +25,7 @@ class main_gui(QMainWindow):
         self.line_edit_servo_4 = QLineEdit(self)
         self.line_edit_servo_5 = QLineEdit(self)
         
+        # SETUP SERVO THREADS
         pi = pigpio.pi()
         self.servo_0 = servo_thread(self, pi, 1500, 0, [500, 2500]) # MORE IS LEFT
         self.servo_1 = servo_thread(self, pi, 800, 1, [500, 1400]) # MORE IS DOWN
@@ -45,6 +49,10 @@ class main_gui(QMainWindow):
         self.line_edit_servo_3.editingFinished.connect(self.update_servo_3)
         self.line_edit_servo_4.editingFinished.connect(self.update_servo_4)
         self.line_edit_servo_5.editingFinished.connect(self.update_servo_5)
+
+        # CONTROLLER CONNECTION
+        self.controller.messager.claw_move.connect(self.move_claw)
+        self.controller.messager.claw_stop.connect(self.stop_claw)
     
 
 
@@ -116,3 +124,9 @@ class main_gui(QMainWindow):
         self.servo_3.cancel()
         self.servo_4.cancel()
         self.servo_5.cancel()
+
+    def move_claw(self, action):
+        self.servo_5.movement(action)
+    
+    def stop_claw(self):
+        self.servo_5.servo_running = False

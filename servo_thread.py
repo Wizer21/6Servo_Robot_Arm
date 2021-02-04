@@ -137,7 +137,7 @@ class servo_thread(QThread):
 
 
             self.set_pulse_width(self.pin, newpos) 
-            time.sleep(0.1)
+            time.sleep(0.01)
             self.servo_position = newpos
             print("ITERATED " + str(newpos))
 
