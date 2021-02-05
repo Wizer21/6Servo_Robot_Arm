@@ -17,7 +17,12 @@ class xbox_controller(QThread):
     def __init__(self):
         QThread.__init__(self)
         self.messager = Communication()
-        self.gamepad = InputDevice('/dev/input/event4')
+
+        try:
+            self.gamepad = InputDevice('/dev/input/event4')
+        except FileNotFoundError:
+            return
+            print("NO CONTROLLER FOUND")
 
         self.buttons = {
             307: "Y",

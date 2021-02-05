@@ -4,6 +4,7 @@ from PyQt5.QtCore import*
 from servo_thread import*
 from time import sleep
 from xbox_controller import*
+import math
 
 class main_gui(QMainWindow):
     def __init__(self):
@@ -90,6 +91,7 @@ class main_gui(QMainWindow):
     def update_servo_1(self):
         if self.sender().text() != "":
             self.servo_1.quick_movement(int(self.sender().text()))
+        self.calc_arm_position()
 
     def update_servo_2(self):
         if self.sender().text() != "":
@@ -153,7 +155,6 @@ class main_gui(QMainWindow):
         self.calc_arm_position()
 
     def rotation_robot(self, action):
-        print("ROTATION ACTION " + str(action))
         self.servo_0.movement(action)
 
     def stop_rotation_robot(self):
@@ -161,16 +162,67 @@ class main_gui(QMainWindow):
         self.calc_arm_position()
 
     def calc_arm_position(self):
-        test = 0
+        # Part = 10.5cm
         # SERVO1:
         # width 500 = 90°
         # width 1400 = 0°
         # SERVO2:
-        # width 500 = 180°si
-        # width 1400 = 90°
+        # width 500 = 180°
+        # width 2200 = 0°
+        pi_rad = math.pi / 180
+        is_second_part_lower = False
 
-        #widht_1 = self.servo_1.servo_position
-        #widht_2 = self.servo_3.servo_position
+        # TRIANGLE 1: X
+        width_1 = self.servo_1.servo_position
+        degrees = 90 - (width_1 - 500) / 10
+        rad = degrees * pi_rad
+        tri_1_x = math.cos(rad) * 10.5
 
-        #print("widht1 " + str(widht_1))
-        #print("widht2 " + str(widht_2))
+        # TRIANGLE 1: Y
+        third_angle = 180 - (degrees + 90)
+        rad = third_angle * pi_rad
+        tri_1_y = math.cos(rad) * 10.5
+
+        width_2 = self.servo_2.servo_position
+        degrees = 180 - (width_2 - 500) / 9.4444
+        
+        print("if " + str(degrees) + " is highter than " + str(third_angle))
+
+        if degrees > third_angle: # 2nd part is is higher
+            print("UPPER")
+            # TRIANGLE 2: X
+            rec_degree = degrees - (90 + third_angle)
+            rad = rec_degree * pi_rad
+            tri_2_x = math.cos(rad) * 10.5
+            
+            # TRIANGLE 2: Y
+            third_angle_tri_2 = 180 - (rec_degree + 90)
+            rad = third_angle_tri_2 * pi_rad
+            tri_2_y = math.cos(rad) * 10.5
+        else: # 2nd part is lower
+            print("LOWER")
+            is_second_part_lower = True
+            rec_degree = degrees - third_angle
+            third_angle_tri_2 = 180 - (rec_degree + 90)
+
+            # TRIANGLE 2: X
+            rad = third_angle_tri_2 * pi_rad
+            tri_2_x = math.cos(rad) * 10.5
+
+            # TRIANGLE 2: Y
+            rad = rec_degree * pi_rad
+            tri_2_y = math.cos(rad) * 10.5
+        
+        if is_second_part_lower:
+            claw_position = [round(tri_1_x + tri_2_x, 2), round(tri_1_y - tri_2_y, 2)]
+        else:
+            claw_position = [round(tri_1_x + tri_2_x, 2), round(tri_1_y + tri_2_y, 2)]
+
+        print("CLAW POSITION " + str(claw_position))
+        
+
+
+
+
+
+
