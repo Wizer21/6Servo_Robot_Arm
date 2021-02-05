@@ -11,6 +11,7 @@ class main_gui(QMainWindow):
         QMainWindow.__init__(self)
         self.pi = pigpio.pi()
         self.controller = xbox_controller()
+        self.arm_chord = [[0, 0], [0, 0]]
 
         # WIDGETS
         self.widget_central = QWidget(self)
@@ -25,6 +26,7 @@ class main_gui(QMainWindow):
         self.line_edit_servo_3 = QLineEdit(self)
         self.line_edit_servo_4 = QLineEdit(self)
         self.line_edit_servo_5 = QLineEdit(self)
+        self.label_profile_arm = QLabel(self)
         
         # SETUP SERVO THREADS
         pi = pigpio.pi()
@@ -74,6 +76,7 @@ class main_gui(QMainWindow):
         self.layout_main.addWidget(self.line_edit_servo_3, 4, 0)
         self.layout_main.addWidget(self.line_edit_servo_4, 5, 0)
         self.layout_main.addWidget(self.line_edit_servo_5, 6, 0)
+        self.layout_main.addWidget(self.label_profile_arm, 7, 0)
 
     def move_left(self):
         self.servo_0.movement(-10)
@@ -96,6 +99,7 @@ class main_gui(QMainWindow):
     def update_servo_2(self):
         if self.sender().text() != "":
             self.servo_2.quick_movement(int(self.sender().text()))
+        self.calc_arm_position()
 
     def update_servo_3(self):
         if self.sender().text() != "":
@@ -177,11 +181,13 @@ class main_gui(QMainWindow):
         degrees = 90 - (width_1 - 500) / 10
         rad = degrees * pi_rad
         tri_1_x = math.cos(rad) * 10.5
+        print("tri1 x " + str(degrees))
 
         # TRIANGLE 1: Y
         third_angle = 180 - (degrees + 90)
         rad = third_angle * pi_rad
         tri_1_y = math.cos(rad) * 10.5
+        print("tri1 y " + str(third_angle))
 
         width_2 = self.servo_2.servo_position
         degrees = 180 - (width_2 - 500) / 9.4444
@@ -191,38 +197,79 @@ class main_gui(QMainWindow):
         if degrees > third_angle: # 2nd part is is higher
             print("UPPER")
             # TRIANGLE 2: X
-            rec_degree = degrees - (90 + third_angle)
+            rec_degree = degrees - third_angle
             rad = rec_degree * pi_rad
             tri_2_x = math.cos(rad) * 10.5
+            print("tri2 x " + str(rec_degree))
             
             # TRIANGLE 2: Y
             third_angle_tri_2 = 180 - (rec_degree + 90)
             rad = third_angle_tri_2 * pi_rad
             tri_2_y = math.cos(rad) * 10.5
+            print("tri2 y " + str(third_angle_tri_2))
         else: # 2nd part is lower
             print("LOWER")
             is_second_part_lower = True
-            rec_degree = degrees - third_angle
+            rec_degree = (90 + degrees) - third_angle
             third_angle_tri_2 = 180 - (rec_degree + 90)
 
             # TRIANGLE 2: X
             rad = third_angle_tri_2 * pi_rad
             tri_2_x = math.cos(rad) * 10.5
+            print("tri2 x " + str(third_angle_tri_2))
 
             # TRIANGLE 2: Y
             rad = rec_degree * pi_rad
             tri_2_y = math.cos(rad) * 10.5
+            print("tri2 y " + str(rec_degree))
         
         if is_second_part_lower:
-            claw_position = [round(tri_1_x + tri_2_x, 2), round(tri_1_y - tri_2_y, 2)]
+            pos1 = round(tri_1_x + tri_2_x, 2)
+            pos2 = round(tri_1_y - tri_2_y, 2)
+            self.arm_chord = [[tri_1_x, tri_1_y], [pos1, pos2]]
+            claw_position = [pos1, pos2]
         else:
-            claw_position = [round(tri_1_x + tri_2_x, 2), round(tri_1_y + tri_2_y, 2)]
+            pos1 = round(tri_1_x + tri_2_x, 2)
+            pos2 = round(tri_1_y + tri_2_y, 2)
+            self.arm_chord = [[tri_1_x, tri_1_y], [pos1, pos2]]
+            claw_position = [pos1, pos2]
+        self.draw_profile()
 
-        print("CLAW POSITION " + str(claw_position))
-        
+    def draw_profile(self):
+        size = 200
+        part = round(size / 5)        
+        centimeter_in_pixels = round((part * 3) / 21)
+        servo1 = [round(self.arm_chord[0][0] * centimeter_in_pixels), round(self.arm_chord[0][1] * centimeter_in_pixels)]
+        claw = [round(self.arm_chord[1][0] * centimeter_in_pixels), round(self.arm_chord[1][1] * centimeter_in_pixels)]
+        print("arm " + str(self.arm_chord))
+        print("servo " + str(servo1))
+        print("claw " + str(claw))
 
+        img = QImage(size, size, QImage.Format_ARGB32) 
+        img.fill(Qt.transparent)
 
+        painter = QPainter(img)
+        pen = QPen()
+        pen.setCapStyle(Qt.RoundCap)
+        pen.setWidth(round(size / 30))
 
+        # DRAW GROUND
+        pen.setColor(QColor("#9e9e9e"))
+        painter.setPen(pen)
+        painter.drawLine(0, part, size, part)
 
+        # DRAW ARM
+        pen.setColor(QColor("#e53935"))
+        painter.setPen(pen)
+        painter.drawLine(part, part, part + servo1[0], part + servo1[1])
+        painter.drawLine(part + servo1[0], part + servo1[1], part + claw[0], part + claw[1])
 
+        # DRAW MOTORS
+        pen.setColor(QColor("#000000"))
+        painter.setPen(pen)
+        painter.drawPoint(part, part)
+        painter.drawPoint(part + servo1[0], part + servo1[1])
+        painter.drawPoint(part + claw[0], part + claw[1])
 
+        painter.end()
+        self.label_profile_arm.setPixmap(QPixmap.fromImage(img.mirrored(False, True)))   
