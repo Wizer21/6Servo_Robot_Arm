@@ -5,6 +5,8 @@ from servo_thread import*
 from time import sleep
 from xbox_controller import*
 import math
+from thread_y_axes import*
+
 
 class main_gui(QMainWindow):
     def __init__(self):
@@ -13,6 +15,7 @@ class main_gui(QMainWindow):
         self.controller = xbox_controller()
         self.arm_chord = [[0, 0], [0, 0]]
         self.is_second_part_lower = False
+        self.thread_y = thread_y_axes(self)
 
         # WIDGETS
         self.widget_central = QWidget(self)
@@ -64,8 +67,10 @@ class main_gui(QMainWindow):
         self.controller.messager.robot_rotation.connect(self.rotation_robot)
         self.controller.messager.robot_rotation_stop.connect(self.stop_rotation_robot)
         self.controller.messager.move_y.connect(self.move_y_axis)
-        self.controller.messager.stop_y.connect(self.stop_rotation_robot)
-    
+        self.controller.messager.stop_y.connect(self.stop_y_axis)
+
+        # X/Y THREAD
+        self.thread_y.messager.send_movement.connect(self.apply_y_position)    
 
     def build(self):
         self.setCentralWidget(self.widget_central)
@@ -169,15 +174,17 @@ class main_gui(QMainWindow):
         self.calc_arm_position()
 
     def move_y_axis(self, action):
-        self.servo_2.movement(action)
-        if self.is_second_part_lower:
-            if action > 0: # more is down
-            self.servo_1.movement(action)
-        else:
-            if action > 0: # more is down
-                self.servo_1.movement(-action)
-            else:
-                
+        self.thread_y.call_movement(-(action / 100))
+
+    def stop_y_axis(self):
+        self.thread_y.run_movement = False
+    
+    # X/Y THREADS MOVEMENTS 
+    def apply_y_position(self, motor_1_width, motor_2_width):
+        self.servo_1.quick_movement(motor_1_width)
+        self.servo_2.quick_movement(motor_2_width)
+        print("motor 1 " + str(motor_1_width))
+        print("motor 2 " + str(motor_2_width))
 
     def calc_arm_position(self):
         # Part = 10.5cm
@@ -195,18 +202,14 @@ class main_gui(QMainWindow):
         degrees = 90 - (width_1 - 500) / 10
         rad = degrees * pi_rad
         tri_1_x = math.cos(rad) * 10.5
-        print("tri1 x " + str(degrees))
 
         # TRIANGLE 1: Y
         third_angle = 180 - (degrees + 90)
         rad = third_angle * pi_rad
         tri_1_y = math.cos(rad) * 10.5
-        print("tri1 y " + str(third_angle))
 
         width_2 = self.servo_2.servo_position
         degrees = 180 - (width_2 - 500) / 9.4444
-        
-        print("if " + str(degrees) + " is highter than " + str(third_angle))
 
         if degrees > third_angle: # 2nd part is is higher
             print("UPPER")
@@ -214,13 +217,11 @@ class main_gui(QMainWindow):
             rec_degree = degrees - third_angle
             rad = rec_degree * pi_rad
             tri_2_x = math.cos(rad) * 10.5
-            print("tri2 x " + str(rec_degree))
             
             # TRIANGLE 2: Y
             third_angle_tri_2 = 180 - (rec_degree + 90)
             rad = third_angle_tri_2 * pi_rad
             tri_2_y = math.cos(rad) * 10.5
-            print("tri2 y " + str(third_angle_tri_2))
         else: # 2nd part is lower
             print("LOWER")
             self.is_second_part_lower = True
@@ -230,23 +231,23 @@ class main_gui(QMainWindow):
             # TRIANGLE 2: X
             rad = third_angle_tri_2 * pi_rad
             tri_2_x = math.cos(rad) * 10.5
-            print("tri2 x " + str(third_angle_tri_2))
 
             # TRIANGLE 2: Y
             rad = rec_degree * pi_rad
             tri_2_y = math.cos(rad) * 10.5
-            print("tri2 y " + str(rec_degree))
+        utils.set_position("is_second_arm_part_lower", self.is_second_part_lower)
         
         if self.is_second_part_lower:
             pos1 = round(tri_1_x + tri_2_x, 2)
             pos2 = round(tri_1_y - tri_2_y, 2)
             self.arm_chord = [[tri_1_x, tri_1_y], [pos1, pos2]]
-            claw_position = [pos1, pos2]
         else:
             pos1 = round(tri_1_x + tri_2_x, 2)
             pos2 = round(tri_1_y + tri_2_y, 2)
             self.arm_chord = [[tri_1_x, tri_1_y], [pos1, pos2]]
-            claw_position = [pos1, pos2]
+
+        utils.set_position("elbow_pos", [tri_1_x, tri_1_y])
+        utils.set_position("claw_pos", [pos1, pos2])
         self.draw_profile()
 
     def draw_profile(self):
@@ -255,9 +256,6 @@ class main_gui(QMainWindow):
         centimeter_in_pixels = round((part * 3) / 21)
         servo1 = [round(self.arm_chord[0][0] * centimeter_in_pixels), round(self.arm_chord[0][1] * centimeter_in_pixels)]
         claw = [round(self.arm_chord[1][0] * centimeter_in_pixels), round(self.arm_chord[1][1] * centimeter_in_pixels)]
-        print("arm " + str(self.arm_chord))
-        print("servo " + str(servo1))
-        print("claw " + str(claw))
 
         img = QImage(size, size, QImage.Format_ARGB32) 
         img.fill(Qt.transparent)

@@ -88,7 +88,7 @@ class xbox_controller(QThread):
                         self.messager.robot_rotation_stop.emit()
 
                 elif code_button == self.joy1_y: 
-                    self.joy1_position[1] = int(event.value)
+                    test = 0
 
                 # JOY 2
                 elif code_button == self.joy2_x:

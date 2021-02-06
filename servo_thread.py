@@ -3,6 +3,7 @@ from PyQt5.QtGui import*
 from PyQt5.QtCore import*
 import time
 import pigpio
+from utils import*
 
 class servo_thread(QThread):
    def __init__(self, parent, pi, position, new_pin, width_range = [500, 2500]):
@@ -72,25 +73,24 @@ class servo_thread(QThread):
       self.set_duty_cycle(channel, (float(width) / self._pulse_width) * 100.0)
          
    def set_duty_cycle(self, channel, percent):
-         steps = int(round(percent * (4096.0 / 100.0)))
+      steps = int(round(percent * (4096.0 / 100.0)))
+      if steps < 0:
+         on = 0
+         off = 4096
+      elif steps > 4095:
+         on = 4096
+         off = 0
+      else:
+         on = 0
+         off = steps
 
-         if steps < 0:
-            on = 0
-            off = 4096
-         elif steps > 4095:
-            on = 4096
-            off = 0
-         else:
-            on = 0
-            off = steps
+      if (channel >= 0) and (channel <= 15):
+         self.pi.i2c_write_i2c_block_data(self.h, self._LED0_ON_L+4*channel,
+            [on & 0xFF, on >> 8, off & 0xFF, off >> 8])
 
-         if (channel >= 0) and (channel <= 15):
-            self.pi.i2c_write_i2c_block_data(self.h, self._LED0_ON_L+4*channel,
-               [on & 0xFF, on >> 8, off & 0xFF, off >> 8])
-
-         else:
-            self.pi.i2c_write_i2c_block_data(self.h, self._ALL_LED_ON_L,
-               [on & 0xFF, on >> 8, off & 0xFF, off >> 8])
+      else:
+         self.pi.i2c_write_i2c_block_data(self.h, self._ALL_LED_ON_L,
+            [on & 0xFF, on >> 8, off & 0xFF, off >> 8])
 
    def cancel(self):
       self.set_duty_cycle(-1, 0)
@@ -122,11 +122,20 @@ class servo_thread(QThread):
             self.quick = False
             return
 
+         if self.servo_position > self.servo_quick_action:
+            diff = self.servo_position - self.servo_quick_action
+         else:
+            diff = self.servo_quick_action - self.servo_position
+         # SERVO MOTOR NEED 0.001666sec TO RUN 1 DEGREE
+         sleep_time = (diff / 11.1111) * 0.001666
+
          self.set_pulse_width(self.pin, self.servo_quick_action) 
-         self.sleep(1)
-         self.servo_position = self.servo_quick_action
+         self.sleep(sleep_time)
          self.quick = False
-         print("Quick " + str(self.servo_quick_action))
+
+         self.servo_position = self.servo_quick_action
+         utils.set_position("width_servo" + str(self.pin), self.servo_position)
+
       else:
          while self.servo_running:
             newpos = self.servo_position + self.servo_action
@@ -139,6 +148,7 @@ class servo_thread(QThread):
             self.set_pulse_width(self.pin, newpos) 
             time.sleep(0.01)
             self.servo_position = newpos
+            utils.set_position(self.pin, self.servo_position)
 
 
 
