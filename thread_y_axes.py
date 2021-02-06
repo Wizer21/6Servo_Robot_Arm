@@ -14,6 +14,7 @@ class thread_y_axes(QThread):
         self.messager = Communication()
         self.action = 0
         self.run_movement = False
+        self.iterator_test = 0
 
 
     def call_movement(self, new_action):
@@ -25,6 +26,7 @@ class thread_y_axes(QThread):
     
     def run(self):
         while self.run_movement:
+            self.iterator_test += 1
             claw_pos = utils.get_position("claw_pos").copy()
             print("CLAWPOS BEFORE UPDATE " + str(claw_pos))
             claw_pos[1] += self.action
@@ -61,7 +63,7 @@ class thread_y_axes(QThread):
             M1_M2_CLAW_angle_minus_90 = (M1_M2_X_angle * 2) - 90
             print("M1_M2_CLAW_angle_minus_90 " + str(M1_M2_CLAW_angle_minus_90))
 
-            first_motor_width = 500 + round(M2_M1_A_angle / 0.1)
+            first_motor_width = 1400 - round(M2_M1_A_angle / 0.1)
             second_motor_width = 2200 - round(M1_M2_CLAW_angle_minus_90 / 0.10588)
             print("first_motor_width " + str(first_motor_width))
             print("second_motor_width " + str(second_motor_width))
@@ -69,4 +71,5 @@ class thread_y_axes(QThread):
             print(str(first_motor_width) + " " + str(second_motor_width))
 
             self.messager.send_movement.emit(first_motor_width, second_motor_width)
+            print(str(self.iterator_test))
             sleep(0.1)

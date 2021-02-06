@@ -108,7 +108,7 @@ class main_gui(QMainWindow):
         if val >= 75:
             utils.resize_and_color_font(self.label_heat, 2, "#d32f2f")
         else:            
-            utils.7/(self.label_heat, 2, "white")
+            utils.resize_and_color_font(self.label_heat, 2, "white")
             
         self.heatTimer.start(1000)
 
@@ -202,8 +202,7 @@ class main_gui(QMainWindow):
         width_2 = self.servo_2.servo_position
         degrees = 180 - (width_2 - 500) / 9.4444
 
-        if degrees > third_angle: # 2nd part is is higher
-            print("UPPER")
+        if degrees > third_angle: # 2nd part is higher
             # TRIANGLE 2: X
             rec_degree = degrees - third_angle
             rad = rec_degree * pi_rad
@@ -214,7 +213,6 @@ class main_gui(QMainWindow):
             rad = third_angle_tri_2 * pi_rad
             tri_2_y = math.cos(rad) * 10.5
         else: # 2nd part is lower
-            print("LOWER")
             self.is_second_part_lower = True
             rec_degree = (90 + degrees) - third_angle
             third_angle_tri_2 = 180 - (rec_degree + 90)
@@ -228,14 +226,12 @@ class main_gui(QMainWindow):
             tri_2_y = math.cos(rad) * 10.5
         utils.set_position("is_second_arm_part_lower", self.is_second_part_lower)
         
+        pos1 = round(tri_1_x + tri_2_x, 2)
         if self.is_second_part_lower:
-            pos1 = round(tri_1_x + tri_2_x, 2)
             pos2 = round(tri_1_y - tri_2_y, 2)
-            self.arm_chord = [[tri_1_x, tri_1_y], [pos1, pos2]]
         else:
-            pos1 = round(tri_1_x + tri_2_x, 2)
             pos2 = round(tri_1_y + tri_2_y, 2)
-            self.arm_chord = [[tri_1_x, tri_1_y], [pos1, pos2]]
+        self.arm_chord = [[tri_1_x, tri_1_y], [pos1, pos2]]
 
         utils.set_position("elbow_pos", [tri_1_x, tri_1_y])
         utils.set_position("claw_pos", [pos1, pos2])
