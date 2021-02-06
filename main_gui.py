@@ -12,6 +12,7 @@ class main_gui(QMainWindow):
         self.pi = pigpio.pi()
         self.controller = xbox_controller()
         self.arm_chord = [[0, 0], [0, 0]]
+        self.is_second_part_lower = False
 
         # WIDGETS
         self.widget_central = QWidget(self)
@@ -62,6 +63,8 @@ class main_gui(QMainWindow):
         self.controller.messager.claw_y_stop.connect(self.stop_y_claw)
         self.controller.messager.robot_rotation.connect(self.rotation_robot)
         self.controller.messager.robot_rotation_stop.connect(self.stop_rotation_robot)
+        self.controller.messager.move_y.connect(self.move_y_axis)
+        self.controller.messager.stop_y.connect(self.stop_rotation_robot)
     
 
     def build(self):
@@ -165,6 +168,17 @@ class main_gui(QMainWindow):
         self.servo_0.servo_running = False
         self.calc_arm_position()
 
+    def move_y_axis(self, action):
+        self.servo_2.movement(action)
+        if self.is_second_part_lower:
+            if action > 0: # more is down
+            self.servo_1.movement(action)
+        else:
+            if action > 0: # more is down
+                self.servo_1.movement(-action)
+            else:
+                
+
     def calc_arm_position(self):
         # Part = 10.5cm
         # SERVO1:
@@ -174,7 +188,7 @@ class main_gui(QMainWindow):
         # width 500 = 180°
         # width 2200 = 0°
         pi_rad = math.pi / 180
-        is_second_part_lower = False
+        self.is_second_part_lower = False
 
         # TRIANGLE 1: X
         width_1 = self.servo_1.servo_position
@@ -209,7 +223,7 @@ class main_gui(QMainWindow):
             print("tri2 y " + str(third_angle_tri_2))
         else: # 2nd part is lower
             print("LOWER")
-            is_second_part_lower = True
+            self.is_second_part_lower = True
             rec_degree = (90 + degrees) - third_angle
             third_angle_tri_2 = 180 - (rec_degree + 90)
 
@@ -223,7 +237,7 @@ class main_gui(QMainWindow):
             tri_2_y = math.cos(rad) * 10.5
             print("tri2 y " + str(rec_degree))
         
-        if is_second_part_lower:
+        if self.is_second_part_lower:
             pos1 = round(tri_1_x + tri_2_x, 2)
             pos2 = round(tri_1_y - tri_2_y, 2)
             self.arm_chord = [[tri_1_x, tri_1_y], [pos1, pos2]]

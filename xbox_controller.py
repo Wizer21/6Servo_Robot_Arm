@@ -12,6 +12,10 @@ class Communication(QObject):
     claw_y_stop = pyqtSignal()
     robot_rotation = pyqtSignal(int)
     robot_rotation_stop = pyqtSignal()
+    move_x = pyqtSignal(int)
+    stop_x = pyqtSignal()
+    move_y = pyqtSignal(int)
+    stop_y = pyqtSignal()
 
 class xbox_controller(QThread):
     def __init__(self):
@@ -43,11 +47,9 @@ class xbox_controller(QThread):
 
         self.joy1_y = 1
         self.joy1_x = 0
-        self.joy1_position = [0, 0]
 
         self.joy2_y = 5
         self.joy2_x = 2
-        self.joy2_position = [0, 0]
 
         self.directionnal_button_x = 16
         self.directionnal_button_y = 17
@@ -98,8 +100,14 @@ class xbox_controller(QThread):
                     else:
                         self.messager.robot_rotation_stop.emit()
 
-                if code_button == self.joy2_y: 
-                    self.joy2_position[1] = int(event.value)
+                if code_button == self.joy2_y:
+                    if not 29767.5 < val_button < 35767.5:
+                        if val_button < 32767.5:
+                            self.messager.move_y.emit(-round((val_button - 32767.5) / 3276.75))
+                        else:
+                            self.messager.move_y.emit(round((32767.5 - val_button) / 3276.75))
+                    else:
+                        self.messager.stop_y.emit() 
 
                 # DIRECTIONAL BUTTON AXIS Y
                 elif code_button == self.directionnal_button_y:  
