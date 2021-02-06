@@ -115,6 +115,29 @@ class servo_thread(QThread):
          self.servo_running = True
          self.start()
 
+   def direct_movement(self, new_pos):
+      if not self.min_width <= new_pos <= self.max_width:
+            print("OUT OF RANGE " + str(self.servo_quick_action))
+            self.quick = False
+            return
+
+      if self.servo_position > new_pos:
+         diff = self.servo_position - new_pos
+      elif self.servo_position < new_pos:
+         diff = new_pos - self.servo_position
+      else:
+         return
+
+      # SERVO MOTOR NEED 0.001666sec TO RUN 1 DEGREE
+      sleep_time = (diff / 11.1111) * 0.001666
+
+      self.set_pulse_width(self.pin, new_pos) 
+      self.sleep(sleep_time)
+
+      print("END " + str(self.pin))
+      self.servo_position = new_pos
+      utils.set_position("width_servo" + str(self.pin), new_pos)
+
    def run(self):
       if self.quick:
          if not self.min_width <= self.servo_quick_action <= self.max_width:
@@ -122,15 +145,8 @@ class servo_thread(QThread):
             self.quick = False
             return
 
-         if self.servo_position > self.servo_quick_action:
-            diff = self.servo_position - self.servo_quick_action
-         else:
-            diff = self.servo_quick_action - self.servo_position
-         # SERVO MOTOR NEED 0.001666sec TO RUN 1 DEGREE
-         sleep_time = (diff / 11.1111) * 0.001666
-
          self.set_pulse_width(self.pin, self.servo_quick_action) 
-         self.sleep(sleep_time)
+         self.sleep(0.5)
          self.quick = False
 
          self.servo_position = self.servo_quick_action

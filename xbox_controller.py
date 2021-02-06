@@ -25,8 +25,8 @@ class xbox_controller(QThread):
         try:
             self.gamepad = InputDevice('/dev/input/event4')
         except FileNotFoundError:
-            return
             print("NO CONTROLLER FOUND")
+            return
 
         self.buttons = {
             307: "Y",
@@ -87,8 +87,14 @@ class xbox_controller(QThread):
                     else:
                         self.messager.robot_rotation_stop.emit()
 
-                elif code_button == self.joy1_y: 
-                    test = 0
+                elif code_button == self.joy1_y:
+                    if not 29767.5 < val_button < 35767.5:
+                        if val_button < 32767.5:
+                            self.messager.move_x.emit(-round((val_button - 32767.5) / 3276.75))
+                        else:
+                            self.messager.move_x.emit(round((32767.5 - val_button) / 3276.75))
+                    else:
+                        self.messager.stop_x.emit() 
 
                 # JOY 2
                 elif code_button == self.joy2_x:

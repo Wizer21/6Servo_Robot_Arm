@@ -5,7 +5,7 @@ from servo_thread import*
 from time import sleep
 from xbox_controller import*
 import math
-from thread_y_axes import*
+from thread_axes import*
 import os
 
 class main_gui(QMainWindow):
@@ -15,7 +15,6 @@ class main_gui(QMainWindow):
         self.controller = xbox_controller()
         self.arm_chord = [[0, 0], [0, 0]]
         self.is_second_part_lower = False
-        self.thread_y = thread_y_axes(self)
         self.heatTimer = QTimer()
 
         # WIDGETS
@@ -41,6 +40,8 @@ class main_gui(QMainWindow):
         self.servo_3 = servo_thread(self, pi, 1000, 3, [500, 2500]) # MORE IS UP
         self.servo_4 = servo_thread(self, pi, 1500, 4, [500, 2500]) # MORE IS RIGHT
         self.servo_5 = servo_thread(self, pi, 1500, 5, [1300, 2500]) # MORE IS WIDER
+        self.thread_y = thread_axes(self, self.servo_1, self.servo_2, False)
+        self.thread_x = thread_axes(self, self.servo_1, self.servo_2, True)
 
         self.resize(700, 700)
         self.build()
@@ -58,9 +59,8 @@ class main_gui(QMainWindow):
         self.controller.messager.robot_rotation_stop.connect(self.stop_rotation_robot)
         self.controller.messager.move_y.connect(self.move_y_axis)
         self.controller.messager.stop_y.connect(self.stop_y_axis)
-
-        # X/Y THREAD
-        self.thread_y.messager.send_movement.connect(self.apply_y_position)    
+        self.controller.messager.move_x.connect(self.move_x_axis)
+        self.controller.messager.stop_x.connect(self.stop_x_axis)
 
         # HEAT CONTROL
         self.heatTimer.timeout.connect(self.update_heat)
@@ -134,7 +134,12 @@ class main_gui(QMainWindow):
         self.servo_3.cancel()
         self.servo_4.cancel()
         self.servo_5.cancel()
-    
+
+        # CLOSE i2c OPPENED IN SERVO THREADS
+        #for i in range(32):
+        #    print(str(i))
+        #    self.pi.i2c_close(i)
+
     # XBOX CONTROLLER MOVEMENTS
     def move_claw(self, action):
         self.servo_5.movement(action)
@@ -165,17 +170,16 @@ class main_gui(QMainWindow):
         self.calc_arm_position()
 
     def move_y_axis(self, action):
-        self.thread_y.call_movement(-(action / 100))
+        self.thread_y.call_movement(action / 100)
 
     def stop_y_axis(self):
         self.thread_y.run_movement = False
-    
-    # X/Y THREADS MOVEMENTS 
-    def apply_y_position(self, motor_1_width, motor_2_width):
-        self.servo_1.quick_movement(motor_1_width)
-        self.servo_2.quick_movement(motor_2_width)
-        print("motor 1 " + str(motor_1_width))
-        print("motor 2 " + str(motor_2_width))
+
+    def move_x_axis(self, action):
+        self.thread_x.call_movement(action / 100)
+
+    def stop_x_axis(self):
+        self.thread_x.run_movement = False
 
     def calc_arm_position(self):
         # Part = 10.5cm

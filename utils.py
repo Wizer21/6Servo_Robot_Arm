@@ -25,7 +25,7 @@ class utils:
             "width_servo4": 0,
             "width_servo5": 0,
             "elbow_pos": [0, 0],
-            "claw_pos": [0, 0],
+            "claw_pos": [1, 1],
             "is_second_arm_part_lower": False       
         }
 
