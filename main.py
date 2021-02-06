@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import*
 from PyQt5.QtGui import*
 from PyQt5.QtCore import*
 from main_gui import*
+from utils import *
 
 
 if __name__ == "__main__":
@@ -24,6 +25,7 @@ if __name__ == "__main__":
         app.setStyleSheet(font_qss + theme)
 
     # SET UP DEFAULT SIZE IN Utils
+    uti = utils(font_size, resolution)
 
     gui = main_gui() 
     gui.show()

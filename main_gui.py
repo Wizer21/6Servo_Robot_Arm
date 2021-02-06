@@ -6,7 +6,7 @@ from time import sleep
 from xbox_controller import*
 import math
 from thread_y_axes import*
-
+import os
 
 class main_gui(QMainWindow):
     def __init__(self):
@@ -16,20 +16,21 @@ class main_gui(QMainWindow):
         self.arm_chord = [[0, 0], [0, 0]]
         self.is_second_part_lower = False
         self.thread_y = thread_y_axes(self)
+        self.heatTimer = QTimer()
 
         # WIDGETS
         self.widget_central = QWidget(self)
         self.layout_main = QGridLayout(self)
+        self.layout_header = QGridLayout(self)
+        self.label_claw = QLabel(self)
+        self.label_title = QLabel("Arm Controller", self)
 
-        self.button_left = QPushButton("Left", self)
-        self.button_right = QPushButton("Right", self)
+        self.layout_right_header = QGridLayout(self)
+        self.label_raspberry = QLabel(self)
+        self.label_heat = QLabel("0°", self)
+        self.label_controller = QLabel("controler icon", self)
+        self.label_controller_name = QLabel("ev4", self)
 
-        self.line_edit_servo_0 = QLineEdit(self)
-        self.line_edit_servo_1 = QLineEdit(self)
-        self.line_edit_servo_2 = QLineEdit(self)
-        self.line_edit_servo_3 = QLineEdit(self)
-        self.line_edit_servo_4 = QLineEdit(self)
-        self.line_edit_servo_5 = QLineEdit(self)
         self.label_profile_arm = QLabel(self)
         
         # SETUP SERVO THREADS
@@ -43,20 +44,9 @@ class main_gui(QMainWindow):
 
         self.resize(700, 700)
         self.build()
+        self.update_heat()
 
         # CONNECTIONS
-        self.button_left.pressed.connect(self.move_left)
-        self.button_left.released.connect(self.stop_0)
-        self.button_right.pressed.connect(self.move_right)
-        self.button_right.released.connect(self.stop_0)  
-
-        self.line_edit_servo_0.editingFinished.connect(self.update_servo_0)
-        self.line_edit_servo_1.editingFinished.connect(self.update_servo_1)
-        self.line_edit_servo_2.editingFinished.connect(self.update_servo_2)
-        self.line_edit_servo_3.editingFinished.connect(self.update_servo_3)
-        self.line_edit_servo_4.editingFinished.connect(self.update_servo_4)
-        self.line_edit_servo_5.editingFinished.connect(self.update_servo_5)
-
         # CONTROLLER CONNECTION
         self.controller.messager.claw_move.connect(self.move_claw)
         self.controller.messager.claw_stop.connect(self.stop_claw)
@@ -72,54 +62,55 @@ class main_gui(QMainWindow):
         # X/Y THREAD
         self.thread_y.messager.send_movement.connect(self.apply_y_position)    
 
+        # HEAT CONTROL
+        self.heatTimer.timeout.connect(self.update_heat)
+
     def build(self):
         self.setCentralWidget(self.widget_central)
         self.widget_central.setLayout(self.layout_main)
-        self.layout_main.addWidget(self.button_left, 0, 0)
-        self.layout_main.addWidget(self.button_right, 0, 1)
 
-        self.layout_main.addWidget(self.line_edit_servo_0, 1, 0)
-        self.layout_main.addWidget(self.line_edit_servo_1, 2, 0)
-        self.layout_main.addWidget(self.line_edit_servo_2, 3, 0)
-        self.layout_main.addWidget(self.line_edit_servo_3, 4, 0)
-        self.layout_main.addWidget(self.line_edit_servo_4, 5, 0)
-        self.layout_main.addWidget(self.line_edit_servo_5, 6, 0)
-        self.layout_main.addWidget(self.label_profile_arm, 7, 0)
+        # HEADER
+        self.layout_main.addLayout(self.layout_header, 0, 0)
+        self.layout_header.addWidget(self.label_claw, 0, 0)
+        self.layout_header.addWidget(self.label_title, 0, 1)
+        self.layout_header.addWidget(self.label_profile_arm, 1, 0, 1, 2)
 
-    def move_left(self):
-        self.servo_0.movement(-10)
+        self.layout_header.addLayout(self.layout_right_header, 0, 2, 2, 1)
+        self.layout_right_header.addWidget(self.label_heat, 0, 0)
+        self.layout_right_header.addWidget(self.label_raspberry, 0, 1)
+        self.layout_right_header.addWidget(self.label_controller_name, 1, 0)
+        self.layout_right_header.addWidget(self.label_controller, 1, 1)
 
-    def move_right(self):
-        self.servo_0.movement(10)
+        # CUSTOM
+        self.layout_header.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.layout_right_header.setAlignment(Qt.AlignRight)
 
-    def stop_0(self):
-        self.servo_0.servo_running = False
+        self.layout_header.setColumnStretch(0, 0)
+        self.layout_header.setColumnStretch(1, 0)
+        self.layout_header.setColumnStretch(2, 1)
 
-    def update_servo_0(self):
-        if self.sender().text() != "":
-            self.servo_0.quick_movement(int(self.sender().text()))
+        self.label_claw.setPixmap(utils.get_resized_pixmap("arm", 0.5))
+        self.label_raspberry.setPixmap(utils.get_resized_pixmap("pi", 0.5))
+        self.label_controller.setPixmap(utils.get_resized_pixmap("controller", 0.5))
 
-    def update_servo_1(self):
-        if self.sender().text() != "":
-            self.servo_1.quick_movement(int(self.sender().text()))
-        self.calc_arm_position()
+    def update_heat(self):
+        output = os.popen("/opt/vc/bin/vcgencmd measure_temp").read()
+        val = output[5:].replace("C", "")
+        val = val.replace("/n", "")
+        val = val.replace("'", "")
+        val = float(val[:-1])
 
-    def update_servo_2(self):
-        if self.sender().text() != "":
-            self.servo_2.quick_movement(int(self.sender().text()))
-        self.calc_arm_position()
-
-    def update_servo_3(self):
-        if self.sender().text() != "":
-            self.servo_3.quick_movement(int(self.sender().text()))
-
-    def update_servo_4(self):
-        if self.sender().text() != "":
-            self.servo_4.quick_movement(int(self.sender().text()))
-
-    def update_servo_5(self):
-        if self.sender().text() != "":
-            self.servo_5.quick_movement(int(self.sender().text()))
+        output = output.replace("'", "")
+        output = output.replace("\n", "")
+        output += "°"
+        
+        self.label_heat.setText(output[5:])
+        if val >= 75:
+            utils.resize_and_color_font(self.label_heat, 2, "#d32f2f")
+        else:            
+            utils.7/(self.label_heat, 2, "white")
+            
+        self.heatTimer.start(1000)
 
     def closeEvent(self, event):
         self.servo_0.servo_running = False
