@@ -93,7 +93,6 @@ class servo_thread(QThread):
             [on & 0xFF, on >> 8, off & 0xFF, off >> 8])
 
    def cancel(self):
-      self.set_duty_cycle(-1, 0)
       self.pi.i2c_close(self.h)
 
    def _write_reg(self, reg, byte):
@@ -117,7 +116,7 @@ class servo_thread(QThread):
 
    def direct_movement(self, new_pos):
       if not self.min_width <= new_pos <= self.max_width:
-            print("OUT OF RANGE " + str(self.servo_quick_action))
+            print("OUT OF RANGE " + str(new_pos))
             self.quick = False
             return
 
@@ -134,7 +133,6 @@ class servo_thread(QThread):
       self.set_pulse_width(self.pin, new_pos) 
       self.sleep(sleep_time)
 
-      print("END " + str(self.pin))
       self.servo_position = new_pos
       utils.set_position("width_servo" + str(self.pin), new_pos)
 
@@ -143,7 +141,7 @@ class servo_thread(QThread):
          if not self.min_width <= self.servo_quick_action <= self.max_width:
             print("OUT OF RANGE " + str(self.servo_quick_action))
             self.quick = False
-            return
+            #return
 
          self.set_pulse_width(self.pin, self.servo_quick_action) 
          self.sleep(0.5)
