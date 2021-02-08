@@ -5,7 +5,6 @@ from PyQt5.QtCore import*
 from main_gui import*
 from utils import *
 
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     

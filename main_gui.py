@@ -16,6 +16,7 @@ class main_gui(QMainWindow):
         self.arm_chord = [[0, 0], [0, 0]]
         self.is_second_part_lower = False
         self.is_first_part_frontward = True
+        self.second_part_front = True
         self.heatTimer = QTimer()
 
         # WIDGETS
@@ -37,8 +38,8 @@ class main_gui(QMainWindow):
         pi = pigpio.pi()
         self.servo_0 = servo_thread(self, pi, 1500, 0, [500, 2500]) # MORE IS LEFT
         self.servo_1 = servo_thread(self, pi, 1700, 1, [500, 2250]) # MORE IS DOWN
-        self.servo_2 = servo_thread(self, pi, 2000, 2, [500, 2220]) # MORE IS DOWN
-        self.servo_3 = servo_thread(self, pi, 1000, 3, [500, 2500]) # MORE IS UP
+        self.servo_2 = servo_thread(self, pi, 1712, 2, [500, 2220]) # MORE IS DOWN
+        self.servo_3 = servo_thread(self, pi, 1300, 3, [500, 2500]) # MORE IS UP
         self.servo_4 = servo_thread(self, pi, 1500, 4, [500, 2500]) # MORE IS RIGHT
         self.servo_5 = servo_thread(self, pi, 1500, 5, [1300, 2500]) # MORE IS WIDER
         self.thread_y = thread_axes(self, self.servo_1, self.servo_2, False)
@@ -190,12 +191,12 @@ class main_gui(QMainWindow):
 
         # TRIANGLE 1: X
         width_1 = self.servo_1.servo_position
-        first_degrees = 180 - (width_1 - 500) / 12.5
+        first_degrees = 180 - (width_1 - 500) / 9.722222
         print("DEGREE " + str(first_degrees))
 
         if first_degrees != 90:
             if first_degrees > 90: 
-                self.is_first_part_frontward = False
+                is_first_part_frontward = False
                 # THE ARM IS BACKWARD
                 # TRIANGLE 1: X
                 degrees = first_degrees - 90
@@ -207,7 +208,7 @@ class main_gui(QMainWindow):
                 rad = third_angle * pi_rad
                 tri_1_x = math.cos(rad) * 10.5
             else:
-                self.is_first_part_frontward = True
+                is_first_part_frontward = True
                 # THE ARM IS FRONTWARD
                 rad = first_degrees * pi_rad
                 tri_1_x = math.cos(rad) * 10.5
@@ -222,18 +223,36 @@ class main_gui(QMainWindow):
             tri_1_x = 0
 
         width_2 = self.servo_2.servo_position
-        print("width_2", str(width_2))
         degrees = 180 - (width_2 - 500) / 9.5555555
+        print("degre arm2", str(degrees))
 
-        if degrees > 90 - first_degrees or not self.is_first_part_frontward: # 2nd part is higher
-            print("up")
-            self.is_second_part_lower = False
+        back_angle = first_degrees - ((first_degrees - 90) * 2)
+        #deg = degrees - 90
+        if degrees > back_angle:
+            # SECOND PART HIGHT AND BACKWARD
+            print("1")
+            second_part_front = False            
+            is_second_part_lower = False
+            degrees -= back_angle
+
+            # TRIANGLE 2: Y
+            rad = degrees * pi_rad
+            tri_2_y = math.cos(rad) * 10.5
+
             # TRIANGLE 2: X
-            if not self.is_first_part_frontward:
-                print("1")
+            third_angle_tri_2 = 180 - (degrees + 90)
+            rad = third_angle_tri_2 * pi_rad
+            tri_2_x = math.cos(rad) * 10.5
+
+        elif degrees > 90 - first_degrees or not is_first_part_frontward: 
+            # SECOND PART HIGHT AND FRONT
+            print("2")
+            is_second_part_lower = False
+            second_part_front = True
+            # TRIANGLE 2: X
+            if not is_first_part_frontward:
                 rec_degree = degrees + (first_degrees - 90)
             else:
-                print("2")
                 rec_degree = degrees - (90 - first_degrees)
 
             rad = rec_degree * pi_rad
@@ -247,9 +266,11 @@ class main_gui(QMainWindow):
             print("third_angle_tri_2", str(third_angle_tri_2))
             rad = third_angle_tri_2 * pi_rad
             tri_2_y = math.cos(rad) * 10.5
-        else: # 2nd part is lower
-            print("down")
-            self.is_second_part_lower = True
+        else: 
+            print("3")
+            # SECOND PART LOW AND FRONT
+            second_part_front = True
+            is_second_part_lower = True
             rec_degree = (90 + degrees) - third_angle
             third_angle_tri_2 = 180 - (rec_degree + 90)
 
@@ -260,20 +281,24 @@ class main_gui(QMainWindow):
             # TRIANGLE 2: Y
             rad = rec_degree * pi_rad
             tri_2_y = math.cos(rad) * 10.5
-        utils.set_position("is_second_arm_part_lower", self.is_second_part_lower)
+
         print("tri_1_x", str(tri_1_x))
         print("tri_2_x", str(tri_2_x))
         print("tri_1_y", str(tri_1_y))
         print("tri_2_y", str(tri_2_y))
-        
-        if self.is_first_part_frontward:
+
+        if is_first_part_frontward and second_part_front:
             pos1 = round(tri_1_x + tri_2_x, 2)
-        else:
+        elif not is_first_part_frontward and not second_part_front:
+            pos1 = round(0 - (tri_2_x + tri_1_x), 2)        
+        elif not is_first_part_frontward and second_part_front:
             pos1 = round(tri_2_x - tri_1_x, 2)
-        if self.is_second_part_lower:
+
+        if is_second_part_lower:
             pos2 = round(tri_1_y - tri_2_y, 2)
         else:
             pos2 = round(tri_1_y + tri_2_y, 2)
+            
         self.arm_chord = [[tri_1_x, tri_1_y], [pos1, pos2]]
 
         utils.set_position("elbow_pos", [tri_1_x, tri_1_y])
@@ -315,4 +340,4 @@ class main_gui(QMainWindow):
 
         painter.end()
 
-        self.label_profile_arm.setPixmap(QPixmap.fromImage(img.mirrored(False, True)))   
+        #self.label_profile_arm.setPixmap(QPixmap.fromImage(img.mirrored(False, True)))   
