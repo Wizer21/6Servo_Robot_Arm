@@ -23,6 +23,6 @@ Come see it on [youtube](https://www.youtube.com/watch?v=-BNIDh299wI&feature=you
 - [X] Make the arm fully managed through an Xbox controller 
 - [ ] Create a pattern movement builder
 - [ ] Connect to arm to a Node.Js api, allowing remote control
-- [ ] Insert a 3D viewer in the application
+- [ ] Insert a 3D viewer in the interface
 
 <img width="600" alt="Failure to load image, open there" src="https://drive.google.com/uc?export=view&id=1G144SaH336PP6PAeimX-bxtZagvuSLau">
