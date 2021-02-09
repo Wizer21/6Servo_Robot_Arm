@@ -7,6 +7,7 @@ from xbox_controller import*
 import math
 from thread_axes import*
 import os
+from presets_widget import *
 
 class main_gui(QMainWindow):
     def __init__(self):
@@ -33,6 +34,8 @@ class main_gui(QMainWindow):
         self.label_controller_name = QLabel("ev4", self)
 
         self.label_profile_arm = QLabel(self)
+
+        self.widget_profiles = presets_widget(self)
         
         # SETUP SERVO THREADS
         pi = pigpio.pi()
@@ -45,7 +48,7 @@ class main_gui(QMainWindow):
         self.thread_y = thread_axes(self, self.servo_1, self.servo_2, False)
         self.thread_x = thread_axes(self, self.servo_1, self.servo_2, True)
 
-        self.resize(700, 700)
+        self.resize(900, 900)
         self.build()
         self.update_heat()
 
@@ -82,6 +85,8 @@ class main_gui(QMainWindow):
         self.layout_right_header.addWidget(self.label_raspberry, 0, 1)
         self.layout_right_header.addWidget(self.label_controller_name, 1, 0)
         self.layout_right_header.addWidget(self.label_controller, 1, 1)
+
+        self.layout_main.addWidget(self.widget_profiles, 1, 0)
 
         # CUSTOM
         self.layout_header.setAlignment(Qt.AlignLeft | Qt.AlignTop)
@@ -180,19 +185,11 @@ class main_gui(QMainWindow):
         self.thread_x.run_movement = False
 
     def calc_arm_position(self):
-        # Part = 10.5cm
-        # SERVO1:
-        # width 500 = 90°
-        # width 1400 = 0°
-        # SERVO2:
-        # width 500 = 180°
-        # width 2220 = 0°
         pi_rad = math.pi / 180
 
         # TRIANGLE 1: X
         width_1 = self.servo_1.servo_position
         first_degrees = 180 - (width_1 - 500) / 9.722222
-        print("DEGREE " + str(first_degrees))
 
         if first_degrees != 90:
             if first_degrees > 90: 
@@ -224,13 +221,11 @@ class main_gui(QMainWindow):
 
         width_2 = self.servo_2.servo_position
         degrees = 180 - (width_2 - 500) / 9.5555555
-        print("degre arm2", str(degrees))
 
         back_angle = first_degrees - ((first_degrees - 90) * 2)
         #deg = degrees - 90
         if degrees > back_angle:
             # SECOND PART HIGHT AND BACKWARD
-            print("1")
             second_part_front = False            
             is_second_part_lower = False
             degrees -= back_angle
@@ -246,7 +241,6 @@ class main_gui(QMainWindow):
 
         elif degrees > 90 - first_degrees or not is_first_part_frontward: 
             # SECOND PART HIGHT AND FRONT
-            print("2")
             is_second_part_lower = False
             second_part_front = True
             # TRIANGLE 2: X
@@ -257,13 +251,9 @@ class main_gui(QMainWindow):
 
             rad = rec_degree * pi_rad
             tri_2_x = math.cos(rad) * 10.5
-            
-            print("degrees", str(degrees))
-            print("third_angle", str(third_angle))
-            print("rec_degree", str(rec_degree))
+        
             # TRIANGLE 2: Y
             third_angle_tri_2 = 180 - (rec_degree + 90)
-            print("third_angle_tri_2", str(third_angle_tri_2))
             rad = third_angle_tri_2 * pi_rad
             tri_2_y = math.cos(rad) * 10.5
         else: 
@@ -281,11 +271,6 @@ class main_gui(QMainWindow):
             # TRIANGLE 2: Y
             rad = rec_degree * pi_rad
             tri_2_y = math.cos(rad) * 10.5
-
-        print("tri_1_x", str(tri_1_x))
-        print("tri_2_x", str(tri_2_x))
-        print("tri_1_y", str(tri_1_y))
-        print("tri_2_y", str(tri_2_y))
 
         if is_first_part_frontward and second_part_front:
             pos1 = round(tri_1_x + tri_2_x, 2)
