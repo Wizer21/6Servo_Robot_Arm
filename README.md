@@ -4,7 +4,7 @@ This project is a 6-axis arm, controlled on a Raspberry Pi.
 The arm can be managed from an Xbox controller. :video_game:  
 By using the calculation method below, I can create vertical or horizontal movements. If, for example, I want to claw to be lowered, I set this new position and calculate from this one, witch should be the new motors postions.
 
-Come see it on [youtube](https://www.youtube.com/channel/UCwJnVZhGoA4HdHr3r9BlZqg) ! :clapper:
+Come see it on [youtube](https://www.youtube.com/watch?v=-BNIDh299wI&feature=youtu.be) ! :clapper:
 
 ## Components
 - [Raspberry Pi 4B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/), 4Gb  
