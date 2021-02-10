@@ -25,7 +25,7 @@ class presets_widget(QWidget):
 
         # PRESET DETAILS
         self.layout_detail = QGridLayout(self)
-        self.lineedit_preset_name = QLineEdit("Profile Name", self)
+        self.lineedit_preset_name = QLineEdit("None", self)
         self.button_play = QPushButton("Play", self)
         self.button_trash = QPushButton("Trash", self)
 
@@ -77,7 +77,10 @@ class presets_widget(QWidget):
 
         # CONNECTIONS
         self.button_add.clicked.connect(self.push_position)
-
+        self.button_play.clicked.connect(self.play_sequence)
+        self.lineedit_preset_name.editingFinished.connect(self.update_preset_name)
+        self.button_new_perset.clicked.connect(self.new_preset_clicked)
+        self.button_trash.clicked.connect(self.delete_opened_preset)
 
     def load_presets(self):
         try:
@@ -99,6 +102,8 @@ class presets_widget(QWidget):
 
 
     def build_presets_list(self):
+        self.clear_layout(self.layout_area)
+
         for preset in self.json_file:
             widget = QWidget(self)
             layout = QHBoxLayout(self)
@@ -117,14 +122,20 @@ class presets_widget(QWidget):
             button_play.setObjectName(preset)
             button_trash.setObjectName(preset)
             button_open.setObjectName(preset)
-            button_open.clicked.connect(self.open_a_preset)
+            button_play.clicked.connect(self.play_preset_from_list)
+            button_open.clicked.connect(self.preset_clicked)
+            button_trash.clicked.connect(self.delete_preset_from_list)
 
-    def open_a_preset(self):
+    def preset_clicked(self):
+        self.opened_preset = self.sender().objectName()
+        self.lineedit_preset_name.setText(self.opened_preset)
+        self.load_a_preset()
+
+    def load_a_preset(self):
         self.opened_size_list = 0
         self.clear_layout(self.layout_area_position)
 
-        self.opened_preset = self.sender().objectName()
-        positions_list = self.json_file[self.sender().objectName()]
+        positions_list = self.json_file[self.opened_preset]
         for pos in positions_list:            
             text = ""
             for p in pos:
@@ -149,7 +160,9 @@ class presets_widget(QWidget):
         button_trash = QPushButton("Trash", self)
 
         button_play.setObjectName(str(self.opened_size_list))
-        button_play.clicked.connect(self.play_sequence)
+        button_trash.setObjectName(str(self.opened_size_list))
+        button_play.clicked.connect(self.play_position)
+        button_trash.clicked.connect(self.delete_position)
 
         layout.addWidget(label)
         layout.addWidget(button_play)
@@ -177,5 +190,61 @@ class presets_widget(QWidget):
 
         self.label_current_position.setText(text)
 
-    def play_sequence(self):
+    def play_position(self):
         self.player.play_new_sequence([self.json_file[self.opened_preset][int(self.sender().objectName())]])
+
+    def play_sequence(self):
+        self.player.play_new_sequence(self.json_file[self.opened_preset])
+
+    def delete_position(self):
+        self.json_file[self.opened_preset].pop(int(self.sender().objectName()))
+        self.load_a_preset()
+
+    def update_preset_name(self):
+        new_name = self.sender().text()
+
+        if not new_name in self.json_file:
+            self.json_file[new_name] = self.json_file.pop(self.opened_preset)
+            self.opened_preset = new_name
+            
+            self.build_presets_list()
+            
+    def new_preset_clicked(self):
+        id = 1
+        while True:
+            if not "New(" + str(id) + ")" in self.json_file:
+                self.opened_preset = "New(" + str(id) + ")"
+                break
+            else:
+                id += 1
+        
+        self.json_file[self.opened_preset] = []        
+        self.build_presets_list()
+        self.lineedit_preset_name.setText(self.opened_preset)
+        self.load_a_preset()
+
+    def play_preset_from_list(self):
+        self.player.play_new_sequence(self.json_file[self.sender().objectName()])
+
+    def delete_preset_from_list(self):
+        self.delete_profile(self.sender().objectName())
+
+    def delete_opened_preset(self):
+        self.delete_profile(self.opened_preset)
+
+    def delete_profile(self, profile):  
+        self.json_file.pop(profile)
+        self.build_presets_list()
+
+        if profile == self.opened_preset:
+            if len(self.json_file) != 0:
+                for i in self.json_file:
+                    self.opened_preset = i
+                    self.load_a_preset()
+                    self.lineedit_preset_name.setText(self.opened_preset)
+                    return
+            else:
+                self.new_preset_clicked()
+            
+        
+             

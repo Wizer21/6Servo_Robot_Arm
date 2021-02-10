@@ -20,7 +20,6 @@ class servo_player(QThread):
 
     def run(self):
         for movement in self.sequence:
-            print(str(movement))
             self.servo_0.quick_movement(movement[0])
             self.servo_1.quick_movement(movement[1])
             self.servo_2.quick_movement(movement[2])
@@ -30,4 +29,3 @@ class servo_player(QThread):
 
             while self.servo_0.quick or self.servo_1.quick or self.servo_2.quick or self.servo_3.quick or self.servo_4.quick or self.servo_5.quick:
                 sleep(0.005)
-        print("END")

@@ -155,19 +155,18 @@ class servo_thread(QThread):
             self.quick = False
             return
 
-         # SERVO MOTOR NEED 0.001666sec TO RUN 1 DEGREE
-         sleep_time = (diff / 11.1111) * 0.001666
+         # 2000 width = 0.3s
+         sleep_time = diff / 3333
 
          self.set_pulse_width(self.pin, self.servo_quick_action) 
-         print("sleep", str(sleep_time))
-         time.sleep(sleep_time)
+         # OPTIMIZE TIME
+         time.sleep(0.5)
          self.servo_position = self.servo_quick_action
 
          utils.set_position("width_servo" + str(self.pin), self.servo_position)
          self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
 
          self.quick = False
-         print("servo end")
       else:
          while self.servo_running:
             newpos = self.servo_position + self.servo_action
