@@ -5,13 +5,17 @@ import time
 import pigpio
 from utils import*
 
+class Communication(QObject):
+   update_displayed_pos = pyqtSignal(int, int)
+
 class servo_thread(QThread):
-   def __init__(self, parent, pi, position, new_pin, width_range = [500, 2500]):
+   def __init__(self, parent, pi, new_pin, width_range = [500, 2500]):
       QThread.__init__(self)
       self.setParent(parent)
       self.quick = False
+      self.messager = Communication()
 
-      self.servo_position = position
+      self.servo_position = 0
       self.servo_action = 0
       self.servo_quick_action = 0
       self.servo_running = False
@@ -45,9 +49,6 @@ class servo_thread(QThread):
       time.sleep(0.0005)
 
       self.set_frequency(60)
-
-      # SET DEFAULT POSITION
-      self.quick_movement(position)
 
    def set_frequency(self, frequency):
       prescale = int(round(25000000.0 / (4096.0 * frequency)) - 1)
@@ -102,10 +103,12 @@ class servo_thread(QThread):
       return self.pi.i2c_read_byte_data(self.h, reg)
    
    def quick_movement(self, position):
-      self.quick = True
-      self.servo_quick_action = position
-      self.servo_running = False
-      self.start()
+      if position != self.servo_position:
+         
+         self.servo_quick_action = position
+         self.servo_running = False
+         self.quick = True
+         self.start()
 
    def movement(self, action):
       self.servo_action = action
@@ -131,25 +134,40 @@ class servo_thread(QThread):
       sleep_time = (diff / 11.1111) * 0.001666
 
       self.set_pulse_width(self.pin, new_pos) 
-      self.sleep(sleep_time)
+      time.sleep(sleep_time)
 
       self.servo_position = new_pos
       utils.set_position("width_servo" + str(self.pin), new_pos)
+      self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
 
    def run(self):
       if self.quick:
          if not self.min_width <= self.servo_quick_action <= self.max_width:
             print("OUT OF RANGE " + str(self.servo_quick_action))
             self.quick = False
-            #return
+            return
+
+         if self.servo_position > self.servo_quick_action:
+            diff = self.servo_position - self.servo_quick_action
+         elif self.servo_position < self.servo_quick_action:
+            diff = self.servo_quick_action - self.servo_position
+         else:
+            self.quick = False
+            return
+
+         # SERVO MOTOR NEED 0.001666sec TO RUN 1 DEGREE
+         sleep_time = (diff / 11.1111) * 0.001666
 
          self.set_pulse_width(self.pin, self.servo_quick_action) 
-         self.sleep(0.5)
-         self.quick = False
-
+         print("sleep", str(sleep_time))
+         time.sleep(sleep_time)
          self.servo_position = self.servo_quick_action
-         utils.set_position("width_servo" + str(self.pin), self.servo_position)
 
+         utils.set_position("width_servo" + str(self.pin), self.servo_position)
+         self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
+
+         self.quick = False
+         print("servo end")
       else:
          while self.servo_running:
             newpos = self.servo_position + self.servo_action
@@ -158,11 +176,11 @@ class servo_thread(QThread):
                self.servo_running = False
                break
 
-
             self.set_pulse_width(self.pin, newpos) 
             time.sleep(0.01)
             self.servo_position = newpos
             utils.set_position(self.pin, self.servo_position)
+            self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
 
 
 

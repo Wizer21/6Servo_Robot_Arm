@@ -4,9 +4,13 @@ from PyQt5.QtCore import*
 import json
 
 class presets_widget(QWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, new_player):
         QWidget.__init__(self, parent)
         self.json_file = {}
+        self.servo_positions = [0, 0, 0, 0, 0, 0]
+        self.opened_preset = "Default"
+        self.player = new_player
+        self.opened_size_list = 0
 
         self.layout_main = QGridLayout(self)
 
@@ -71,6 +75,9 @@ class presets_widget(QWidget):
         self.layout_main.setColumnStretch(0, 1)
         self.layout_main.setColumnStretch(1, 2)
 
+        # CONNECTIONS
+        self.button_add.clicked.connect(self.push_position)
+
 
     def load_presets(self):
         try:
@@ -93,7 +100,6 @@ class presets_widget(QWidget):
 
     def build_presets_list(self):
         for preset in self.json_file:
-            print(str(preset))
             widget = QWidget(self)
             layout = QHBoxLayout(self)
             label = QLabel(preset, self)
@@ -114,24 +120,44 @@ class presets_widget(QWidget):
             button_open.clicked.connect(self.open_a_preset)
 
     def open_a_preset(self):
+        self.opened_size_list = 0
         self.clear_layout(self.layout_area_position)
 
+        self.opened_preset = self.sender().objectName()
         positions_list = self.json_file[self.sender().objectName()]
-        for pos in positions_list:
-            layout = QHBoxLayout(self)
-            
+        for pos in positions_list:            
             text = ""
             for p in pos:
                 text += str(p) + "/"
 
-            label = QLabel(text, self)
-            button_play = QPushButton("Play", self)
-            button_trash = QPushButton("Trash", self)
+            self.build_pos_line(text)
 
-            layout.addWidget(label)
-            layout.addWidget(button_play)
-            layout.addWidget(button_trash)
-            self.layout_area_position.addLayout(layout)
+    def push_position(self):
+        new_pos = []
+        text = ""
+        for p in self.servo_positions:
+            new_pos.append(p)
+            text += str(p) + "/"
+        
+        self.json_file[self.opened_preset].append(new_pos)
+        self.build_pos_line(text)
+
+    def build_pos_line(self, text):
+        layout = QHBoxLayout(self)
+        label = QLabel(text, self)
+        button_play = QPushButton("Play", self)
+        button_trash = QPushButton("Trash", self)
+
+        button_play.setObjectName(str(self.opened_size_list))
+        button_play.clicked.connect(self.play_sequence)
+
+        layout.addWidget(label)
+        layout.addWidget(button_play)
+        layout.addWidget(button_trash)
+        self.layout_area_position.addLayout(layout)
+
+        self.opened_size_list += 1
+
 
     def clear_layout(self, layout):
         while layout.count():
@@ -140,3 +166,16 @@ class presets_widget(QWidget):
                 child.widget().deleteLater()
             elif child.layout() is not None:
                 self.clear_layout(child.layout())
+
+
+    def update_pos(self, servo_id, position):
+        self.servo_positions[servo_id] = position
+
+        text = ""
+        for p in self.servo_positions:
+            text += str(p) + "/"
+
+        self.label_current_position.setText(text)
+
+    def play_sequence(self):
+        self.player.play_new_sequence([self.json_file[self.opened_preset][int(self.sender().objectName())]])

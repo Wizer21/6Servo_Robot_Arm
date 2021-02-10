@@ -8,6 +8,7 @@ import math
 from thread_axes import*
 import os
 from presets_widget import *
+from servo_player import *
 
 class main_gui(QMainWindow):
     def __init__(self):
@@ -34,24 +35,28 @@ class main_gui(QMainWindow):
         self.label_controller_name = QLabel("ev4", self)
 
         self.label_profile_arm = QLabel(self)
-
-        self.widget_profiles = presets_widget(self)
         
         # SETUP SERVO THREADS
         pi = pigpio.pi()
-        self.servo_0 = servo_thread(self, pi, 1500, 0, [500, 2500]) # MORE IS LEFT
-        self.servo_1 = servo_thread(self, pi, 1700, 1, [500, 2250]) # MORE IS DOWN
-        self.servo_2 = servo_thread(self, pi, 1712, 2, [500, 2220]) # MORE IS DOWN
-        self.servo_3 = servo_thread(self, pi, 1300, 3, [500, 2500]) # MORE IS UP
-        self.servo_4 = servo_thread(self, pi, 1500, 4, [500, 2500]) # MORE IS RIGHT
-        self.servo_5 = servo_thread(self, pi, 1500, 5, [1300, 2500]) # MORE IS WIDER
+        self.servo_0 = servo_thread(self, pi, 0, [500, 2500]) # MORE IS LEFT
+        self.servo_1 = servo_thread(self, pi, 1, [500, 2250]) # MORE IS DOWN
+        self.servo_2 = servo_thread(self, pi, 2, [500, 2220]) # MORE IS DOWN
+        self.servo_3 = servo_thread(self, pi, 3, [500, 2500]) # MORE IS UP
+        self.servo_4 = servo_thread(self, pi, 4, [500, 2500]) # MORE IS RIGHT
+        self.servo_5 = servo_thread(self, pi, 5, [1300, 2500]) # MORE IS WIDER
         self.thread_y = thread_axes(self, self.servo_1, self.servo_2, False)
         self.thread_x = thread_axes(self, self.servo_1, self.servo_2, True)
+        self.player = servo_player(self, self.servo_0, self.servo_1, self.servo_2, self.servo_3, self.servo_4, self.servo_5)
+
+        self.widget_profiles = presets_widget(self, self.player)
 
         self.resize(900, 900)
         self.build()
         self.update_heat()
+        self.connections()
+        self.ini_servo()
 
+    def connections(self):
         # CONNECTIONS
         # CONTROLLER CONNECTION
         self.controller.messager.claw_move.connect(self.move_claw)
@@ -66,6 +71,14 @@ class main_gui(QMainWindow):
         self.controller.messager.stop_y.connect(self.stop_y_axis)
         self.controller.messager.move_x.connect(self.move_x_axis)
         self.controller.messager.stop_x.connect(self.stop_x_axis)
+
+        # UPDATE DISPLAYED POSITION
+        self.servo_0.messager.update_displayed_pos.connect(self.update_position)
+        self.servo_1.messager.update_displayed_pos.connect(self.update_position)
+        self.servo_2.messager.update_displayed_pos.connect(self.update_position)
+        self.servo_3.messager.update_displayed_pos.connect(self.update_position)
+        self.servo_4.messager.update_displayed_pos.connect(self.update_position)
+        self.servo_5.messager.update_displayed_pos.connect(self.update_position)
 
         # HEAT CONTROL
         self.heatTimer.timeout.connect(self.update_heat)
@@ -99,6 +112,15 @@ class main_gui(QMainWindow):
         self.label_claw.setPixmap(utils.get_resized_pixmap("arm", 0.5))
         self.label_raspberry.setPixmap(utils.get_resized_pixmap("pi", 0.5))
         self.label_controller.setPixmap(utils.get_resized_pixmap("controller", 0.5))
+
+    def ini_servo(self): 
+        self.servo_0.quick_movement(1500)
+        self.servo_1.quick_movement(1700)
+        self.servo_2.quick_movement(1712)
+        self.servo_3.quick_movement(1300)
+        self.servo_4.quick_movement(1500)
+        self.servo_5.quick_movement(1500)
+
 
     def update_heat(self):
         output = os.popen("/opt/vc/bin/vcgencmd measure_temp").read()
@@ -257,7 +279,6 @@ class main_gui(QMainWindow):
             rad = third_angle_tri_2 * pi_rad
             tri_2_y = math.cos(rad) * 10.5
         else: 
-            print("3")
             # SECOND PART LOW AND FRONT
             second_part_front = True
             is_second_part_lower = True
@@ -326,3 +347,6 @@ class main_gui(QMainWindow):
         painter.end()
 
         #self.label_profile_arm.setPixmap(QPixmap.fromImage(img.mirrored(False, True)))   
+
+    def update_position(self, id_servo, pos):
+        self.widget_profiles.update_pos(id_servo, pos)
