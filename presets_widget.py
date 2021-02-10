@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import*
 from PyQt5.QtGui import*
 from PyQt5.QtCore import*
 import json
+from utils import *
 
 class presets_widget(QWidget):
     def __init__(self, parent, new_player):
@@ -27,7 +28,7 @@ class presets_widget(QWidget):
         self.layout_detail = QGridLayout(self)
         self.lineedit_preset_name = QLineEdit("None", self)
         self.button_play = QPushButton("Play", self)
-        self.button_trash = QPushButton("Trash", self)
+        self.button_trash = QPushButton("Delete", self)
 
         self.scroll_area_positions_list = QScrollArea(self)
         self.widget_area_position = QWidget(self)
@@ -75,6 +76,20 @@ class presets_widget(QWidget):
         self.layout_main.setColumnStretch(0, 1)
         self.layout_main.setColumnStretch(1, 2)
 
+        utils.resize_and_font(self.label_presets_title, 1.5)
+
+        utils.set_icon_resized(self.button_play, "play", 1)
+        utils.set_icon_resized(self.button_trash, "trash", 1)
+        utils.set_icon_resized(self.button_add, "corner-arrow", 1)
+
+        utils.style_click_button(self.button_play, "#388e3c")
+        utils.style_click_button(self.button_trash, "#d32f2f")
+        utils.style_click_button(self.button_add, "#6a1b9a")
+        utils.style_click_button(self.button_new_perset, "#ffa000")
+
+        res = utils.get_resolution
+        self.lineedit_preset_name.setStyleSheet("border: 0px solid white; font-size: {0}px;".format(str(int(utils.get_resolution()[0] * 0.015))))
+
         # CONNECTIONS
         self.button_add.clicked.connect(self.push_position)
         self.button_play.clicked.connect(self.play_sequence)
@@ -109,8 +124,8 @@ class presets_widget(QWidget):
             layout = QHBoxLayout(self)
             label = QLabel(preset, self)
             button_play = QPushButton("Play", self)
-            button_trash = QPushButton("Trash", self)
-            button_open = QPushButton("Right arrow", self)
+            button_trash = QPushButton("Delete", self)
+            button_open = QPushButton(self)
 
             widget.setLayout(layout)
             layout.addWidget(label)
@@ -125,6 +140,14 @@ class presets_widget(QWidget):
             button_play.clicked.connect(self.play_preset_from_list)
             button_open.clicked.connect(self.preset_clicked)
             button_trash.clicked.connect(self.delete_preset_from_list)
+
+            utils.set_icon_resized(button_play, "run", 1)
+            utils.set_icon_resized(button_trash, "trash", 1)
+            utils.set_icon_resized(button_open, "right", 1)
+            utils.style_click_button(button_play, "#388e3c")
+            utils.style_click_button(button_trash, "#d32f2f")
+            utils.style_click_button(button_open, "#0288d1")
+            utils.set_icon_resized(button_play, "play", 1)
 
     def preset_clicked(self):
         self.opened_preset = self.sender().objectName()
@@ -156,8 +179,8 @@ class presets_widget(QWidget):
     def build_pos_line(self, text):
         layout = QHBoxLayout(self)
         label = QLabel(text, self)
-        button_play = QPushButton("Play", self)
-        button_trash = QPushButton("Trash", self)
+        button_play = QPushButton("Go to", self)
+        button_trash = QPushButton("Erase", self)
 
         button_play.setObjectName(str(self.opened_size_list))
         button_trash.setObjectName(str(self.opened_size_list))
@@ -168,6 +191,11 @@ class presets_widget(QWidget):
         layout.addWidget(button_play)
         layout.addWidget(button_trash)
         self.layout_area_position.addLayout(layout)
+
+        utils.set_icon_resized(button_play, "run", 1)
+        utils.set_icon_resized(button_trash, "eraser", 1)
+        utils.style_click_button(button_play, "#283593")
+        utils.style_click_button(button_trash, "#d32f2f")
 
         self.opened_size_list += 1
 
@@ -245,6 +273,3 @@ class presets_widget(QWidget):
                     return
             else:
                 self.new_preset_clicked()
-            
-        
-             

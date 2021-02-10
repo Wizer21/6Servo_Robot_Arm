@@ -50,7 +50,7 @@ class main_gui(QMainWindow):
 
         self.widget_profiles = presets_widget(self, self.player)
 
-        self.resize(900, 900)
+        utils.window_resize_on_rez(self, 0.6, 0.6)
         self.build()
         self.update_heat()
         self.connections()
@@ -102,6 +102,7 @@ class main_gui(QMainWindow):
         self.layout_main.addWidget(self.widget_profiles, 1, 0)
 
         # CUSTOM
+        utils.resize_and_font(self.label_title, 2.5)
         self.layout_header.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.layout_right_header.setAlignment(Qt.AlignRight)
 
@@ -164,6 +165,7 @@ class main_gui(QMainWindow):
         self.servo_4.cancel()
         self.servo_5.cancel()
 
+        self.widget_profiles.save_presets()
 
     # XBOX CONTROLLER MOVEMENTS
     def move_claw(self, action):
