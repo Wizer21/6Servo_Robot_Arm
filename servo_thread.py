@@ -156,11 +156,11 @@ class servo_thread(QThread):
             return
 
          # 2000 width = 0.3s
-         sleep_time = diff / 3333
+         sleep_time = diff / 1300
 
          self.set_pulse_width(self.pin, self.servo_quick_action) 
          # OPTIMIZE TIME
-         time.sleep(0.5)
+         time.sleep(sleep_time)
          self.servo_position = self.servo_quick_action
 
          utils.set_position("width_servo" + str(self.pin), self.servo_position)

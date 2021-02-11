@@ -71,6 +71,7 @@ class main_gui(QMainWindow):
         self.controller.messager.stop_y.connect(self.stop_y_axis)
         self.controller.messager.move_x.connect(self.move_x_axis)
         self.controller.messager.stop_x.connect(self.stop_x_axis)
+        self.controller.messager.push_position.connect(self.call_push_position)
 
         # UPDATE DISPLAYED POSITION
         self.servo_0.messager.update_displayed_pos.connect(self.update_position)
@@ -352,3 +353,6 @@ class main_gui(QMainWindow):
 
     def update_position(self, id_servo, pos):
         self.widget_profiles.update_pos(id_servo, pos)
+
+    def call_push_position(self):
+        self.widget_profiles.push_position()

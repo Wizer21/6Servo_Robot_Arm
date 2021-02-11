@@ -40,6 +40,14 @@ class presets_widget(QWidget):
         self.build()
         self.load_presets()
         self.build_presets_list()
+        
+        print(str(self.json_file))
+        for key in self.json_file:
+            self.opened_preset = key
+            self.load_a_preset()
+            self.lineedit_preset_name.setText(key)
+            break
+
 
     def build(self):
         self.setLayout(self.layout_main)
@@ -87,7 +95,6 @@ class presets_widget(QWidget):
         utils.style_click_button(self.button_add, "#6a1b9a")
         utils.style_click_button(self.button_new_perset, "#ffa000")
 
-        res = utils.get_resolution
         self.lineedit_preset_name.setStyleSheet("border: 0px solid white; font-size: {0}px;".format(str(int(utils.get_resolution()[0] * 0.015))))
 
         # CONNECTIONS
@@ -121,19 +128,20 @@ class presets_widget(QWidget):
 
         for preset in self.json_file:
             widget = QWidget(self)
-            layout = QHBoxLayout(self)
+            layout = QGridLayout(self)
             label = QLabel(preset, self)
             button_play = QPushButton("Play", self)
             button_trash = QPushButton("Delete", self)
             button_open = QPushButton(self)
 
             widget.setLayout(layout)
-            layout.addWidget(label)
-            layout.addWidget(button_play)
-            layout.addWidget(button_trash)
-            layout.addWidget(button_open)
+            layout.addWidget(label, 0, 0)
+            layout.addWidget(button_play, 0, 1)
+            layout.addWidget(button_trash, 0, 2)
+            layout.addWidget(button_open, 0, 3)
             self.layout_area.addWidget(widget)
 
+            layout.setColumnStretch(0, 1)
             button_play.setObjectName(preset)
             button_trash.setObjectName(preset)
             button_open.setObjectName(preset)
@@ -177,7 +185,9 @@ class presets_widget(QWidget):
         self.build_pos_line(text)
 
     def build_pos_line(self, text):
-        layout = QHBoxLayout(self)
+        layout = QGridLayout(self)
+
+        pos_line = QLabel(str(self.opened_size_list + 1))
         label = QLabel(text, self)
         button_play = QPushButton("Go to", self)
         button_trash = QPushButton("Erase", self)
@@ -187,15 +197,19 @@ class presets_widget(QWidget):
         button_play.clicked.connect(self.play_position)
         button_trash.clicked.connect(self.delete_position)
 
-        layout.addWidget(label)
-        layout.addWidget(button_play)
-        layout.addWidget(button_trash)
+        layout.addWidget(pos_line, 0, 0)
+        layout.addWidget(label, 0, 1)
+        layout.addWidget(button_play, 0, 2)
+        layout.addWidget(button_trash, 0, 3)
         self.layout_area_position.addLayout(layout)
+
+        layout.setColumnStretch(1, 1)
 
         utils.set_icon_resized(button_play, "run", 1)
         utils.set_icon_resized(button_trash, "eraser", 1)
         utils.style_click_button(button_play, "#283593")
         utils.style_click_button(button_trash, "#d32f2f")
+        pos_line.setStyleSheet("color: white; background-color: #474747; font-size: {0}px; padding: {1}px; margin: 0px".format(str(int(utils.get_resolution()[0] * 0.007)), str(int(utils.get_resolution()[0] * 0.009))))
 
         self.opened_size_list += 1
 

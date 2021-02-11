@@ -16,6 +16,7 @@ class Communication(QObject):
     stop_x = pyqtSignal()
     move_y = pyqtSignal(int)
     stop_y = pyqtSignal()
+    push_position = pyqtSignal()
 
 class xbox_controller(QThread):
     def __init__(self):
@@ -73,6 +74,9 @@ class xbox_controller(QThread):
                         self.messager.claw_rotation_stop.emit()
                     else:
                         self.messager.claw_rotation.emit(-10)
+                elif code_button == 310: # VIEW
+                    if val_button == 0:
+                        self.messager.push_position.emit()
 
 
             #JOYSTICK

@@ -21,7 +21,7 @@ Come see it on [youtube](https://www.youtube.com/watch?v=-BNIDh299wI&feature=you
 
 ## To do :memo:
 - [X] Make the arm fully managed through an Xbox controller 
-- [ ] Create a pattern movement builder
+- [X] Create a pattern builder
 - [ ] Connect to arm to a Node.Js api, allowing remote control
 - [ ] Insert a 3D viewer in the interface
 
