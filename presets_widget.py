@@ -41,7 +41,6 @@ class presets_widget(QWidget):
         self.load_presets()
         self.build_presets_list()
         
-        print(str(self.json_file))
         for key in self.json_file:
             self.opened_preset = key
             self.load_a_preset()

@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import*
 from PyQt5.QtGui import*
 from PyQt5.QtCore import*
 from evdev import*
+import json
+import time
 
 class Communication(QObject):
     claw_move = pyqtSignal(int)
@@ -19,15 +21,12 @@ class Communication(QObject):
     push_position = pyqtSignal()
 
 class xbox_controller(QThread):
-    def __init__(self):
-        QThread.__init__(self)
+    def __init__(self, parent):
+        QThread.__init__(self, parent)
         self.messager = Communication()
-
-        try:
-            self.gamepad = InputDevice('/dev/input/event4')
-        except FileNotFoundError:
-            print("NO CONTROLLER FOUND")
-            return
+        self.last_path = ""
+        self.parent = parent
+        self.stop_thread = False
 
         self.buttons = {
             307: "Y",
@@ -56,14 +55,40 @@ class xbox_controller(QThread):
         self.directionnal_button_y = 17
 
         self.holded_button = 0
+
+    def load_last_controller(self):
+        try:
+            with open("./files/controller.json", "r") as file:
+                self.last_path = json.load(file) 
+                self.gamepad = InputDevice(self.last_path)
+                self.start()
+        except FileNotFoundError:
+            return 
+
+    def save_controller(self):        
+        with open("./files/controller.json", "w") as file:
+            json.dump(self.last_path, file)
+
+    def new_device(self, url):
+        self.stop_thread = True
+
+        self.wait()
+
+        self.gamepad = InputDevice(url)
+        self.last_path = url
         self.start()
 
     def run(self):
         for event in self.gamepad.read_loop():
+            if self.stop_thread:
+                self.stop_thread = False
+                return
+
             val_button = int(event.value)
             code_button = int(event.code)
             #BUTTON
-            if event.type == ecodes.EV_KEY:             
+            if event.type == ecodes.EV_KEY:        
+                print("catch")     
                 if code_button == 309: # RB
                     if val_button == 0:
                         self.messager.claw_rotation_stop.emit()
@@ -151,3 +176,5 @@ class xbox_controller(QThread):
                         self.messager.claw_stop.emit()
                     else:
                         self.messager.claw_move.emit(-round(val_button / 102.6))
+
+                

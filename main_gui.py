@@ -1,20 +1,22 @@
 from PyQt5.QtWidgets import*
 from PyQt5.QtGui import*
 from PyQt5.QtCore import*
-from servo_thread import*
-from time import sleep
-from xbox_controller import*
-import math
 from thread_axes import*
-import os
 from presets_widget import *
 from servo_player import *
+from controller_settings import *
+from servo_thread import*
+from xbox_controller import*
+from time import sleep
+import os
+import math
 
 class main_gui(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.pi = pigpio.pi()
-        self.controller = xbox_controller()
+        self.controller = xbox_controller(self)
+        self.controller_window = controller_settings(self, self.controller)
         self.arm_chord = [[0, 0], [0, 0]]
         self.is_second_part_lower = False
         self.is_first_part_frontward = True
@@ -22,6 +24,10 @@ class main_gui(QMainWindow):
         self.heatTimer = QTimer()
 
         # WIDGETS
+        self.bar = QMenuBar(self)
+        self.menu_more = QMenu("More", self)
+        self.action_controller_settings = QAction("Controller", self)
+
         self.widget_central = QWidget(self)
         self.layout_main = QGridLayout(self)
         self.layout_header = QGridLayout(self)
@@ -32,9 +38,10 @@ class main_gui(QMainWindow):
         self.label_raspberry = QLabel(self)
         self.label_heat = QLabel("0°", self)
         self.label_controller = QLabel("controler icon", self)
-        self.label_controller_name = QLabel("ev4", self)
+        self.label_controller_name = QLabel("none", self)
 
-        self.label_profile_arm = QLabel(self)
+        self.scene_arm_profile = QGraphicsScene(self)
+        self.graphic_view_arm = QGraphicsView(self.scene_arm_profile, self)
         
         # SETUP SERVO THREADS
         pi = pigpio.pi()
@@ -55,6 +62,8 @@ class main_gui(QMainWindow):
         self.update_heat()
         self.connections()
         self.ini_servo()
+        self.draw_profile()
+        self.controller.load_last_controller()
 
     def connections(self):
         # CONNECTIONS
@@ -84,15 +93,22 @@ class main_gui(QMainWindow):
         # HEAT CONTROL
         self.heatTimer.timeout.connect(self.update_heat)
 
+        # MENU BAR
+        self.action_controller_settings.triggered.connect(self.open_controller)
+
     def build(self):
         self.setCentralWidget(self.widget_central)
         self.widget_central.setLayout(self.layout_main)
+
+        self.setMenuBar(self.bar)
+        self.bar.addMenu(self.menu_more)
+        self.menu_more.addAction(self.action_controller_settings)
 
         # HEADER
         self.layout_main.addLayout(self.layout_header, 0, 0)
         self.layout_header.addWidget(self.label_claw, 0, 0)
         self.layout_header.addWidget(self.label_title, 0, 1)
-        self.layout_header.addWidget(self.label_profile_arm, 1, 0, 1, 2)
+        self.layout_header.addWidget(self.graphic_view_arm, 1, 0, 1, 2)
 
         self.layout_header.addLayout(self.layout_right_header, 0, 2, 2, 1)
         self.layout_right_header.addWidget(self.label_heat, 0, 0)
@@ -114,6 +130,7 @@ class main_gui(QMainWindow):
         self.label_claw.setPixmap(utils.get_resized_pixmap("arm", 0.5))
         self.label_raspberry.setPixmap(utils.get_resized_pixmap("pi", 0.5))
         self.label_controller.setPixmap(utils.get_resized_pixmap("controller", 0.5))
+
 
     def ini_servo(self): 
         self.servo_0.quick_movement(1500)
@@ -167,6 +184,7 @@ class main_gui(QMainWindow):
         self.servo_5.cancel()
 
         self.widget_profiles.save_presets()
+        self.controller.save_controller()
 
     # XBOX CONTROLLER MOVEMENTS
     def move_claw(self, action):
@@ -315,44 +333,47 @@ class main_gui(QMainWindow):
         self.draw_profile()
 
     def draw_profile(self):
-        size = 200
+        size = 4
         part = round(size / 5)        
         centimeter_in_pixels = round((part * 3) / 21)
         servo1 = [round(self.arm_chord[0][0] * centimeter_in_pixels), round(self.arm_chord[0][1] * centimeter_in_pixels)]
         claw = [round(self.arm_chord[1][0] * centimeter_in_pixels), round(self.arm_chord[1][1] * centimeter_in_pixels)]
-
-        img = QImage(size, size, QImage.Format_ARGB32) 
-        img.fill(Qt.transparent)
-
-        painter = QPainter(img)
+ 
         pen = QPen()
         pen.setCapStyle(Qt.RoundCap)
         pen.setWidth(round(size / 30))
 
+        self.scene_arm_profile.clear()
+
         # DRAW GROUND
         pen.setColor(QColor("#9e9e9e"))
-        painter.setPen(pen)
-        painter.drawLine(0, part, size, part)
+        #self.scene_arm_profile.addLine(0, part, size, part, pen)
 
         # DRAW ARM
-        pen.setColor(QColor("#e53935"))
-        painter.setPen(pen)
-        painter.drawLine(part, part, part + servo1[0], part + servo1[1])
-        painter.drawLine(part + servo1[0], part + servo1[1], part + claw[0], part + claw[1])
+        #pen.setColor(QColor("#e53935"))
+        #painter.setPen(pen)
+        #painter.drawLine(part, part, part + servo1[0], part + servo1[1])
+        #painter.drawLine(part + servo1[0], part + servo1[1], part + claw[0], part + claw[1])
 
         # DRAW MOTORS
-        pen.setColor(QColor("#000000"))
-        painter.setPen(pen)
-        painter.drawPoint(part, part)
-        painter.drawPoint(part + servo1[0], part + servo1[1])
-        painter.drawPoint(part + claw[0], part + claw[1])
+        #pen.setColor(QColor("#000000"))
+        #painter.setPen(pen)
+        #painter.drawPoint(part, part)
+        #painter.drawPoint(part + servo1[0], part + servo1[1])
+        #painter.drawPoint(part + claw[0], part + claw[1])
 
-        painter.end()
-
-        #self.label_profile_arm.setPixmap(QPixmap.fromImage(img.mirrored(False, True)))   
+        #pix.mirrored(False, True)
+        #self.graphic_view_arm.setPixmap(self.pix, 200, 200) 
+        #painter.end()  
 
     def update_position(self, id_servo, pos):
         self.widget_profiles.update_pos(id_servo, pos)
 
     def call_push_position(self):
         self.widget_profiles.push_position()
+
+    def open_controller(self):
+        self.controller_window.exec()
+
+    def update_controller(self, controller_name):
+        self.label_controller_name.setText(controller_name)
