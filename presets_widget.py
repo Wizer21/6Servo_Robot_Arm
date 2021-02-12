@@ -127,7 +127,7 @@ class presets_widget(QWidget):
 
 
     def build_presets_list(self):
-        self.clear_layout(self.layout_area)
+        utils.clear_layout(self.layout_area)
 
         for preset in self.json_file:
             widget = QWidget(self)
@@ -167,7 +167,7 @@ class presets_widget(QWidget):
 
     def load_a_preset(self):
         self.opened_size_list = 0
-        self.clear_layout(self.layout_area_position)
+        utils.clear_layout(self.layout_area_position)
 
         positions_list = self.json_file[self.opened_preset]
         for pos in positions_list:            
@@ -214,15 +214,6 @@ class presets_widget(QWidget):
         pos_line.setAlignment(Qt.AlignCenter)
 
         self.opened_size_list += 1
-
-
-    def clear_layout(self, layout):
-        while layout.count():
-            child = layout.takeAt(0)
-            if child.widget() is not None:
-                child.widget().deleteLater()
-            elif child.layout() is not None:
-                self.clear_layout(child.layout())
 
 
     def update_pos(self, servo_id, position):

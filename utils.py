@@ -41,7 +41,8 @@ class utils:
             "trash": self.scale_pixmap("./files/trash.png", reference_icon_size),
             "corner-arrow": self.scale_pixmap("./files/corner-arrow.png", reference_icon_size),
             "run": self.scale_pixmap("./files/run.png", reference_icon_size),
-            "eraser": self.scale_pixmap("./files/eraser.png", reference_icon_size)
+            "eraser": self.scale_pixmap("./files/eraser.png", reference_icon_size),
+            "reload": self.scale_pixmap("./files/reload.png", reference_icon_size)
         }
 
     def scale_pixmap(self, url, size_ref):
@@ -93,7 +94,6 @@ class utils:
                 QPushButton::pressed {
                     background-color: #161616;
                     color: <color>;
-                    padding: 5px;
                     border: 0px solid transparent
                 }"""
 
@@ -103,3 +103,12 @@ class utils:
     @staticmethod
     def get_resolution():
         return resolution
+
+    @staticmethod
+    def clear_layout(layout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget() is not None:
+                child.widget().deleteLater()
+            elif child.layout() is not None:
+                self.clear_layout(child.layout())

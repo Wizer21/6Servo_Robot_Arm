@@ -120,8 +120,8 @@ class main_gui(QMainWindow):
 
         # CUSTOM
         self.layout_main.setAlignment(Qt.AlignTop)
+        self.layout_header.setAlignment(Qt.AlignTop)
         utils.resize_and_font(self.label_title, 2.5)
-        self.layout_header.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.layout_right_header.setAlignment(Qt.AlignRight)
 
         self.layout_header.setColumnStretch(0, 0)
@@ -131,6 +131,8 @@ class main_gui(QMainWindow):
         self.label_claw.setPixmap(utils.get_resized_pixmap("arm", 0.5))
         self.label_raspberry.setPixmap(utils.get_resized_pixmap("pi", 0.5))
         self.label_controller.setPixmap(utils.get_resized_pixmap("controller", 0.5))
+        utils.resize_and_font(self.label_controller_name, 1.5)
+        self.label_controller_name.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 
 
     def ini_servo(self): 

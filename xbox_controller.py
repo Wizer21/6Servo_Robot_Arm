@@ -71,110 +71,112 @@ class xbox_controller(QThread):
 
     def new_device(self, url):
         self.stop_thread = True
-
-        self.wait()
+        self.wait(1000)
 
         self.gamepad = InputDevice(url)
         self.last_path = url
         self.start()
 
     def run(self):
-        for event in self.gamepad.read_loop():
-            if self.stop_thread:
-                self.stop_thread = False
-                return
+        try:
+            for event in self.gamepad.read_loop():
+                if self.stop_thread:
+                    self.stop_thread = False
+                    return
 
-            val_button = int(event.value)
-            code_button = int(event.code)
-            #BUTTON
-            if event.type == ecodes.EV_KEY:        
-                print("catch")     
-                if code_button == 309: # RB
-                    if val_button == 0:
-                        self.messager.claw_rotation_stop.emit()
-                    else:
-                        self.messager.claw_rotation.emit(10)
-                elif code_button == 308: # LB
-                    if val_button == 0:
-                        self.messager.claw_rotation_stop.emit()
-                    else:
-                        self.messager.claw_rotation.emit(-10)
-                elif code_button == 310: # VIEW
-                    if val_button == 0:
-                        self.messager.push_position.emit()
-
-
-            #JOYSTICK
-            elif event.type == ecodes.EV_ABS: 
-                # JOY 1
-                if code_button == self.joy1_x:
-                    if not 29767.5 < val_button < 35767.5:
-                        if val_button < 32767.5:
-                            self.messager.robot_rotation.emit(-round((val_button - 32767.5) / 3276.75))
+                val_button = int(event.value)
+                code_button = int(event.code)
+                #BUTTON
+                if event.type == ecodes.EV_KEY:   
+                    if code_button == 309: # RB
+                        if val_button == 0:
+                            self.messager.claw_rotation_stop.emit()
                         else:
-                            self.messager.robot_rotation.emit(round((32767.5 - val_button) / 3276.75))
-                    else:
-                        self.messager.robot_rotation_stop.emit()
-
-                elif code_button == self.joy1_y:
-                    if not 29767.5 < val_button < 35767.5:
-                        if val_button < 32767.5:
-                            self.messager.move_x.emit(-round((val_button - 32767.5) / 3276.75))
+                            self.messager.claw_rotation.emit(10)
+                    elif code_button == 308: # LB
+                        if val_button == 0:
+                            self.messager.claw_rotation_stop.emit()
                         else:
-                            self.messager.move_x.emit(round((32767.5 - val_button) / 3276.75))
-                    else:
-                        self.messager.stop_x.emit() 
+                            self.messager.claw_rotation.emit(-10)
+                    elif code_button == 310: # VIEW
+                        if val_button == 0:
+                            self.messager.push_position.emit()
 
-                # JOY 2
-                elif code_button == self.joy2_x:
-                    if not 29767.5 < val_button < 35767.5:
-                        if val_button < 32767.5:
-                            self.messager.robot_rotation.emit(-round((val_button - 32767.5) / 3276.75))
+
+                #JOYSTICK
+                elif event.type == ecodes.EV_ABS: 
+                    # JOY 1
+                    if code_button == self.joy1_x:
+                        if not 29767.5 < val_button < 35767.5:
+                            if val_button < 32767.5:
+                                self.messager.robot_rotation.emit(-round((val_button - 32767.5) / 3276.75))
+                            else:
+                                self.messager.robot_rotation.emit(round((32767.5 - val_button) / 3276.75))
                         else:
-                            self.messager.robot_rotation.emit(round((32767.5 - val_button) / 3276.75))
-                    else:
-                        self.messager.robot_rotation_stop.emit()
+                            self.messager.robot_rotation_stop.emit()
 
-                if code_button == self.joy2_y:
-                    if not 29767.5 < val_button < 35767.5:
-                        if val_button < 32767.5:
-                            self.messager.move_y.emit(-round((val_button - 32767.5) / 3276.75))
+                    elif code_button == self.joy1_y:
+                        if not 29767.5 < val_button < 35767.5:
+                            if val_button < 32767.5:
+                                self.messager.move_x.emit(-round((val_button - 32767.5) / 3276.75))
+                            else:
+                                self.messager.move_x.emit(round((32767.5 - val_button) / 3276.75))
                         else:
-                            self.messager.move_y.emit(round((32767.5 - val_button) / 3276.75))
-                    else:
-                        self.messager.stop_y.emit() 
+                            self.messager.stop_x.emit() 
 
-                # DIRECTIONAL BUTTON AXIS Y
-                elif code_button == self.directionnal_button_y:  
-                    pos = int(str(event.value).replace("L", ""))
-                    if pos > 0:
-                        self.messager.claw_y_move.emit(-10)
-                    elif pos < 0:
-                        self.messager.claw_y_move.emit(10)
-                    elif pos == 0:
-                        self.messager.claw_y_stop.emit()
+                    # JOY 2
+                    elif code_button == self.joy2_x:
+                        if not 29767.5 < val_button < 35767.5:
+                            if val_button < 32767.5:
+                                self.messager.robot_rotation.emit(-round((val_button - 32767.5) / 3276.75))
+                            else:
+                                self.messager.robot_rotation.emit(round((32767.5 - val_button) / 3276.75))
+                        else:
+                            self.messager.robot_rotation_stop.emit()
 
-                # DIRECTIONAL BUTTON AXIS X
-                elif code_button == self.directionnal_button_x:
-                    pos = int(str(val_button).replace("L", ""))
-                    if pos > 0:
-                        print("Right pressed")
-                        self.holded_button = "Right"
-                    elif pos < 0:
-                        print("Left pressed")
-                        self.holded_button = "Left"
-                    elif pos == 0:
-                        print(self.holded_button + " released")
-                
-                elif code_button == self.rt: # RT
-                    if val_button == 0:
-                        self.messager.claw_stop.emit()
-                    else:
-                        self.messager.claw_move.emit(round(val_button / 102.6))
-                elif code_button == self.lt: # LT                    
-                    if val_button == 0:
-                        self.messager.claw_stop.emit()
-                    else:
-                        self.messager.claw_move.emit(-round(val_button / 102.6))
+                    if code_button == self.joy2_y:
+                        if not 29767.5 < val_button < 35767.5:
+                            if val_button < 32767.5:
+                                self.messager.move_y.emit(-round((val_button - 32767.5) / 3276.75))
+                            else:
+                                self.messager.move_y.emit(round((32767.5 - val_button) / 3276.75))
+                        else:
+                            self.messager.stop_y.emit() 
 
-                
+                    # DIRECTIONAL BUTTON AXIS Y
+                    elif code_button == self.directionnal_button_y:  
+                        pos = int(str(event.value).replace("L", ""))
+                        if pos > 0:
+                            self.messager.claw_y_move.emit(-10)
+                        elif pos < 0:
+                            self.messager.claw_y_move.emit(10)
+                        elif pos == 0:
+                            self.messager.claw_y_stop.emit()
+
+                    # DIRECTIONAL BUTTON AXIS X
+                    elif code_button == self.directionnal_button_x:
+                        pos = int(str(val_button).replace("L", ""))
+                        if pos > 0:
+                            print("Right pressed")
+                            self.holded_button = "Right"
+                        elif pos < 0:
+                            print("Left pressed")
+                            self.holded_button = "Left"
+                        elif pos == 0:
+                            print(self.holded_button + " released")
+                    
+                    elif code_button == self.rt: # RT
+                        if val_button == 0:
+                            self.messager.claw_stop.emit()
+                        else:
+                            self.messager.claw_move.emit(round(val_button / 102.6))
+                    elif code_button == self.lt: # LT                    
+                        if val_button == 0:
+                            self.messager.claw_stop.emit()
+                        else:
+                            self.messager.claw_move.emit(-round(val_button / 102.6))
+        except OSError:
+            self.parent.update_controller("None")
+            return
+        
+                    

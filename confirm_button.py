@@ -9,8 +9,9 @@ class Communication(QObject):
 class confirm_button(QPushButton):
     def __init__(self, new_parent, new_text, new_icon, object_name = ""):
         QPushButton.__init__(self, parent = new_parent)
-        self.setContentsMargins(10, 10, 10, 10)
+        self.setContentsMargins(20, 20, 20, 20)
         self.setMinimumHeight(int(utils.get_resolution()[0] * 0.023))
+        self.setMinimumWidth(int(utils.get_resolution()[0] * 0.047))
 
         self.setCursor(Qt.PointingHandCursor)
         self.is_waiting_second_click = False
