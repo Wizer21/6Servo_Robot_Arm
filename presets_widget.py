@@ -3,6 +3,7 @@ from PyQt5.QtGui import*
 from PyQt5.QtCore import*
 import json
 from utils import *
+from confirm_button import *
 
 class presets_widget(QWidget):
     def __init__(self, parent, new_player):
@@ -28,7 +29,7 @@ class presets_widget(QWidget):
         self.layout_detail = QGridLayout(self)
         self.lineedit_preset_name = QLineEdit("None", self)
         self.button_play = QPushButton("Play", self)
-        self.button_trash = QPushButton("Delete", self)
+        self.button_trash = confirm_button(self, "Delete", "trash")
 
         self.scroll_area_positions_list = QScrollArea(self)
         self.widget_area_position = QWidget(self)
@@ -86,13 +87,16 @@ class presets_widget(QWidget):
         utils.resize_and_font(self.label_presets_title, 1.5)
 
         utils.set_icon_resized(self.button_play, "play", 1)
-        utils.set_icon_resized(self.button_trash, "trash", 1)
         utils.set_icon_resized(self.button_add, "corner-arrow", 1)
 
         utils.style_click_button(self.button_play, "#388e3c")
         utils.style_click_button(self.button_trash, "#d32f2f")
         utils.style_click_button(self.button_add, "#6a1b9a")
         utils.style_click_button(self.button_new_perset, "#ffa000")
+
+        self.button_play.setCursor(Qt.PointingHandCursor)
+        self.button_add.setCursor(Qt.PointingHandCursor)
+        self.button_new_perset.setCursor(Qt.PointingHandCursor)
 
         self.lineedit_preset_name.setStyleSheet("border: 0px solid white; font-size: {0}px;".format(str(int(utils.get_resolution()[0] * 0.015))))
 
@@ -101,7 +105,7 @@ class presets_widget(QWidget):
         self.button_play.clicked.connect(self.play_sequence)
         self.lineedit_preset_name.editingFinished.connect(self.update_preset_name)
         self.button_new_perset.clicked.connect(self.new_preset_clicked)
-        self.button_trash.clicked.connect(self.delete_opened_preset)
+        self.button_trash.messager.clicked_valid.connect(self.delete_opened_preset)
 
     def load_presets(self):
         try:
@@ -130,7 +134,7 @@ class presets_widget(QWidget):
             layout = QGridLayout(self)
             label = QLabel(preset, self)
             button_play = QPushButton("Play", self)
-            button_trash = QPushButton("Delete", self)
+            button_trash = confirm_button(self, "Delete", "trash", preset)
             button_open = QPushButton(self)
 
             widget.setLayout(layout)
@@ -142,17 +146,17 @@ class presets_widget(QWidget):
 
             layout.setColumnStretch(0, 1)
             button_play.setObjectName(preset)
-            button_trash.setObjectName(preset)
             button_open.setObjectName(preset)
             button_play.clicked.connect(self.play_preset_from_list)
             button_open.clicked.connect(self.preset_clicked)
-            button_trash.clicked.connect(self.delete_preset_from_list)
+            button_trash.messager.clicked_valid.connect(self.delete_preset_from_list)
+
+            button_play.setCursor(Qt.PointingHandCursor)
+            button_open.setCursor(Qt.PointingHandCursor)
 
             utils.set_icon_resized(button_play, "run", 1)
-            utils.set_icon_resized(button_trash, "trash", 1)
             utils.set_icon_resized(button_open, "right", 1)
             utils.style_click_button(button_play, "#388e3c")
-            utils.style_click_button(button_trash, "#d32f2f")
             utils.style_click_button(button_open, "#0288d1")
             utils.set_icon_resized(button_play, "play", 1)
 
@@ -189,12 +193,11 @@ class presets_widget(QWidget):
         pos_line = QLabel(str(self.opened_size_list + 1))
         label = QLabel(text, self)
         button_play = QPushButton("Go to", self)
-        button_trash = QPushButton("Erase", self)
+        button_trash = confirm_button(self, "Erase", "eraser", str(self.opened_size_list))
 
         button_play.setObjectName(str(self.opened_size_list))
-        button_trash.setObjectName(str(self.opened_size_list))
         button_play.clicked.connect(self.play_position)
-        button_trash.clicked.connect(self.delete_position)
+        button_trash.messager.clicked_valid.connect(self.delete_position)
 
         layout.addWidget(pos_line, 0, 0)
         layout.addWidget(label, 0, 1)
@@ -204,11 +207,11 @@ class presets_widget(QWidget):
 
         layout.setColumnStretch(1, 1)
 
+        button_play.setCursor(Qt.PointingHandCursor)
         utils.set_icon_resized(button_play, "run", 1)
-        utils.set_icon_resized(button_trash, "eraser", 1)
         utils.style_click_button(button_play, "#283593")
-        utils.style_click_button(button_trash, "#d32f2f")
-        pos_line.setStyleSheet("color: white; background-color: #474747; font-size: {0}px; padding: {1}px; margin: 0px".format(str(int(utils.get_resolution()[0] * 0.007)), str(int(utils.get_resolution()[0] * 0.009))))
+        pos_line.setStyleSheet("color: white; background-color: #474747; font-size: {0}px; padding: 0px; margin: 0px; min-width: {1}px; min-eight: {1}px;".format(str(int(utils.get_resolution()[0] * 0.007)), str(int(utils.get_resolution()[0] * 0.02))))
+        pos_line.setAlignment(Qt.AlignCenter)
 
         self.opened_size_list += 1
 

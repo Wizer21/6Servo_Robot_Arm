@@ -119,6 +119,7 @@ class main_gui(QMainWindow):
         self.layout_main.addWidget(self.widget_profiles, 1, 0)
 
         # CUSTOM
+        self.layout_main.setAlignment(Qt.AlignTop)
         utils.resize_and_font(self.label_title, 2.5)
         self.layout_header.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.layout_right_header.setAlignment(Qt.AlignRight)

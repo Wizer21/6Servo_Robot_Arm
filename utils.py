@@ -81,10 +81,10 @@ class utils:
         widget.setStyleSheet("font-size: {0}px; font: bold;".format(int(pixelsize * value)))
 
     @staticmethod
-    def style_click_button(widget, color):
+    def style_click_button(widget, color, padding = 10):
         style = """QPushButton {
                 background-color: <color>;
-                padding: 10px;
+                padding: <pad>px;
                 border: 0px solid red;
                 }
                 QPushButton::hover {
@@ -96,6 +96,8 @@ class utils:
                     padding: 5px;
                     border: 0px solid transparent
                 }"""
+
+        style = style.replace("<pad>", str(padding))
         widget.setStyleSheet(style.replace("<color>", color))
 
     @staticmethod
