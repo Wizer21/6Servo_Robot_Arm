@@ -39,20 +39,22 @@ class main_gui(QMainWindow):
         self.label_heat = QLabel("0°", self)
         self.label_controller = QLabel("controler icon", self)
         self.label_controller_name = QLabel("none", self)
+        self.check_lock_claw_angle = QCheckBox("Lock claw anlge", self)
 
         self.scene_arm_profile = QGraphicsScene(self)
         self.graphic_view_arm = QGraphicsView(self.scene_arm_profile, self)
         
         # SETUP SERVO THREADS
         pi = pigpio.pi()
-        self.servo_0 = servo_thread(self, pi, 0, [500, 2500]) # MORE IS LEFT
+        self.servo_0 = servo_thread(self, pi, 0, [500, 2500]) # MORE IS LEF        
         self.servo_1 = servo_thread(self, pi, 1, [500, 2250]) # MORE IS DOWN
         self.servo_2 = servo_thread(self, pi, 2, [500, 2220]) # MORE IS DOWN
-        self.servo_3 = servo_thread(self, pi, 3, [500, 2500]) # MORE IS UP
+        # 3 1460 = 90°
+        self.servo_3 = servo_thread(self, pi, 3, [640, 1700]) # MORE IS UP
         self.servo_4 = servo_thread(self, pi, 4, [500, 2500]) # MORE IS RIGHT
         self.servo_5 = servo_thread(self, pi, 5, [1300, 2500]) # MORE IS WIDER
-        self.thread_y = thread_axes(self, self.servo_1, self.servo_2, False)
-        self.thread_x = thread_axes(self, self.servo_1, self.servo_2, True)
+        self.thread_y = thread_axes(self, self.servo_1, self.servo_2, self.servo_3, False)
+        self.thread_x = thread_axes(self, self.servo_1, self.servo_2, self.servo_3, True)
         self.player = servo_player(self, self.servo_0, self.servo_1, self.servo_2, self.servo_3, self.servo_4, self.servo_5)
 
         self.widget_profiles = presets_widget(self, self.player)
@@ -81,6 +83,7 @@ class main_gui(QMainWindow):
         self.controller.messager.move_x.connect(self.move_x_axis)
         self.controller.messager.stop_x.connect(self.stop_x_axis)
         self.controller.messager.push_position.connect(self.call_push_position)
+        self.controller.messager.toggle_claw_lock.connect(self.toggle_claw_lock_controller)
 
         # UPDATE DISPLAYED POSITION
         self.servo_0.messager.update_displayed_pos.connect(self.update_position)
@@ -95,6 +98,9 @@ class main_gui(QMainWindow):
 
         # MENU BAR
         self.action_controller_settings.triggered.connect(self.open_controller)
+
+        # WIDGET
+        self.check_lock_claw_angle.stateChanged.connect(self.toggle_claw_lock)
 
     def build(self):
         self.setCentralWidget(self.widget_central)
@@ -115,6 +121,7 @@ class main_gui(QMainWindow):
         self.layout_right_header.addWidget(self.label_raspberry, 0, 1)
         self.layout_right_header.addWidget(self.label_controller_name, 1, 0)
         self.layout_right_header.addWidget(self.label_controller, 1, 1)
+        self.layout_right_header.addWidget(self.check_lock_claw_angle, 2, 0)
 
         self.layout_main.addWidget(self.widget_profiles, 1, 0)
 
@@ -133,6 +140,7 @@ class main_gui(QMainWindow):
         self.label_controller.setPixmap(utils.get_resized_pixmap("controller", 0.5))
         utils.resize_and_font(self.label_controller_name, 1.5)
         self.label_controller_name.setAlignment(Qt.AlignRight | Qt.AlignCenter)
+        self.check_lock_claw_angle.setChecked(False)
 
 
     def ini_servo(self): 
@@ -331,8 +339,9 @@ class main_gui(QMainWindow):
             
         self.arm_chord = [[tri_1_x, tri_1_y], [pos1, pos2]]
 
-        utils.set_position("elbow_pos", [tri_1_x, tri_1_y])
-        utils.set_position("claw_pos", [pos1, pos2])
+        self.thread_x.claw_pos = [pos1, pos2]
+        self.thread_y.claw_pos = [pos1, pos2]
+
         self.draw_profile()
 
     def draw_profile(self):
@@ -380,3 +389,35 @@ class main_gui(QMainWindow):
 
     def update_controller(self, controller_name):
         self.label_controller_name.setText(controller_name)
+
+    def toggle_claw_lock(self, box_state):
+        if box_state == 2:
+            self.thread_x.lock_claw = True 
+            self.thread_y.lock_claw = True 
+
+            pos = self.update_claw_angle()
+
+            self.thread_x.absolute_claw_angle = pos
+            self.thread_y.absolute_claw_angle = pos
+
+        else:
+            self.thread_x.lock_claw = False 
+            self.thread_y.lock_claw = False 
+
+    def update_claw_angle(self):
+
+        M1 = 180 - (self.servo_1.servo_position - 500) / 9.722222
+        M2 = 180 - (self.servo_2.servo_position - 500) / 9.555555
+        M3 = (self.servo_3.servo_position - 640) / 9.111111
+
+        print("M1", str(M1))
+        print("M2", str(M2))
+        print("M3", str(M3))
+        absolute_0 = (90 - M1) + (90 - M2)
+        print("absolute_0", str(absolute_0))
+        M3_degree = M3 - absolute_0
+        print("NEW ANGLE", str(M3_degree))
+        return M3_degree
+
+    def toggle_claw_lock_controller(self):
+        self.check_lock_claw_angle.toggle()

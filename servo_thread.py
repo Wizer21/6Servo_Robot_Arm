@@ -137,7 +137,6 @@ class servo_thread(QThread):
       time.sleep(sleep_time)
 
       self.servo_position = new_pos
-      utils.set_position("width_servo" + str(self.pin), new_pos)
       self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
 
    def run(self):
@@ -163,7 +162,6 @@ class servo_thread(QThread):
          time.sleep(sleep_time)
          self.servo_position = self.servo_quick_action
 
-         utils.set_position("width_servo" + str(self.pin), self.servo_position)
          self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
 
          self.quick = False
@@ -178,7 +176,6 @@ class servo_thread(QThread):
             self.set_pulse_width(self.pin, newpos) 
             time.sleep(0.01)
             self.servo_position = newpos
-            utils.set_position(self.pin, self.servo_position)
             self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
 
 

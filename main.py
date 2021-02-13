@@ -10,7 +10,7 @@ if __name__ == "__main__":
     
     # DELETE '?' ON QDIALOG
     app.setAttribute(Qt.AA_DisableWindowContextHelpButton)
-
+ 
     # GET WINDOW SIZE
     rec = QRect(app.primaryScreen().availableGeometry())
     resolution = [rec.width(), rec.height()]

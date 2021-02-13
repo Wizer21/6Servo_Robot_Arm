@@ -69,6 +69,5 @@ class controller_settings(QDialog):
         text = self.sender().text()
 
         self.label_display_current_controller.setText(text)
-        self.xbox_class.new_device(self.devices_dict[text])
-        self.parent.update_controller(text)
+        self.xbox_class.new_device(self.devices_dict[text], text)
 

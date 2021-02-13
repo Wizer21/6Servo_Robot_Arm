@@ -21,12 +21,13 @@ class Communication(QObject):
     move_y = pyqtSignal(int)
     stop_y = pyqtSignal()
     push_position = pyqtSignal()
+    toggle_claw_lock = pyqtSignal()
 
 class xbox_controller(QThread):
     def __init__(self, parent):
         QThread.__init__(self, parent)
         self.messager = Communication()
-        self.last_path = ""
+        self.controller_dict = {}
         self.parent = parent
         self.stop_thread = False
 
@@ -61,23 +62,26 @@ class xbox_controller(QThread):
     def load_last_controller(self):
         try:
             with open("./files/controller.json", "r") as file:
-                self.last_path = json.load(file) 
-                self.gamepad = InputDevice(self.last_path)
+                self.controller_dict = json.load(file) 
+                self.gamepad = InputDevice(self.controller_dict["url"])
+                self.parent.update_controller(self.controller_dict["name"])
                 self.start()
         except FileNotFoundError:
             return 
 
     def save_controller(self):        
         with open("./files/controller.json", "w") as file:
-            json.dump(self.last_path, file)
+            json.dump(self.controller_dict, file)
 
-    def new_device(self, url):
+    def new_device(self, url, output_name):
         self.stop_thread = True
         self.wait(200)
 
         self.gamepad = InputDevice(url)
-        self.last_path = url
-        
+        self.controller_dict["name"] = output_name
+        self.controller_dict["url"] = url
+        self.parent.update_controller(output_name)
+
         self.stop_thread = False
         self.start()
 
@@ -106,12 +110,15 @@ class xbox_controller(QThread):
                             elif code_button == 310: # VIEW
                                 if val_button == 0:
                                     self.messager.push_position.emit()
+                            elif code_button == 306: # X
+                                if val_button == 1:
+                                    self.messager.toggle_claw_lock.emit()
 
                         #JOYSTICK
                         elif event.type == ecodes.EV_ABS: 
                             # JOY 1
                             if code_button == self.joy1_x:
-                                if not 29767.5 < val_button < 35767.5:
+                                if not 25767.5 < val_button < 39767.5:
                                     if val_button < 32767.5:
                                         self.messager.robot_rotation.emit(-round((val_button - 32767.5) / 3276.75))
                                     else:
@@ -120,7 +127,7 @@ class xbox_controller(QThread):
                                     self.messager.robot_rotation_stop.emit()
 
                             elif code_button == self.joy1_y:
-                                if not 29767.5 < val_button < 35767.5:
+                                if not 25767.5 < val_button < 39767.5:
                                     if val_button < 32767.5:
                                         self.messager.move_x.emit(-round((val_button - 32767.5) / 3276.75))
                                     else:
@@ -130,7 +137,7 @@ class xbox_controller(QThread):
 
                             # JOY 2
                             elif code_button == self.joy2_x:
-                                if not 29767.5 < val_button < 35767.5:
+                                if not 25767.5 < val_button < 39767.5:
                                     if val_button < 32767.5:
                                         self.messager.robot_rotation.emit(-round((val_button - 32767.5) / 3276.75))
                                     else:
@@ -139,7 +146,7 @@ class xbox_controller(QThread):
                                     self.messager.robot_rotation_stop.emit()
 
                             if code_button == self.joy2_y:
-                                if not 29767.5 < val_button < 35767.5:
+                                if not 25767.5 < val_button < 39767.5:
                                     if val_button < 32767.5:
                                         self.messager.move_y.emit(-round((val_button - 32767.5) / 3276.75))
                                     else:
