@@ -15,6 +15,7 @@ Come see it on [youtube](https://www.youtube.com/watch?v=-BNIDh299wI&feature=you
 - Python  
 - [Qt](https://www.qt.io/) for the GUI  
 - [Pigpio](http://abyz.me.uk/rpi/pigpio/examples.html) for the pin control  
+- [evdev](https://github.com/gvalkov/python-evdev) for reading the controller output
 
 <img width="800" alt="Failure to load image, open there" src="https://drive.google.com/uc?export=view&id=1lsptWAeE1047xdFiftxcgOpJheJEhI9M">
 <img width="800" alt="Failure to load image, open there" src="https://drive.google.com/uc?export=view&id=1kcNa3WQNZCbU3FKjx-0OkFhBEvRXbJol">
@@ -22,6 +23,7 @@ Come see it on [youtube](https://www.youtube.com/watch?v=-BNIDh299wI&feature=you
 ## To do :memo:
 - [X] Make the arm fully managed through an Xbox controller 
 - [X] Create a pattern builder
+- [ ] Possibility to lock the claw angle
 - [ ] Connect to arm to a Node.Js api, allowing remote control
 - [ ] Insert a 3D viewer in the interface
 
