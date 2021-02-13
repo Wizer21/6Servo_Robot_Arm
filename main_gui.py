@@ -214,10 +214,19 @@ class main_gui(QMainWindow):
 
     def move_y_claw(self, action):
         self.servo_3.movement(action)
+        if self.check_lock_claw_angle.isChecked():
+            pos = self.update_claw_angle()
+
+            self.thread_x.absolute_claw_angle = pos
+            self.thread_y.absolute_claw_angle = pos
 
     def stop_y_claw(self):
         self.servo_3.servo_running = False
-        self.calc_arm_position()
+        if self.check_lock_claw_angle.isChecked():
+            pos = self.update_claw_angle()
+
+            self.thread_x.absolute_claw_angle = pos
+            self.thread_y.absolute_claw_angle = pos
 
     def rotation_robot(self, action):
         self.servo_0.movement(action)
