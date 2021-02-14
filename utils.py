@@ -88,4 +88,4 @@ class utils:
             if child.widget() is not None:
                 child.widget().deleteLater()
             elif child.layout() is not None:
-                self.clear_layout(child.layout())
+                utils.clear_layout(child.layout())

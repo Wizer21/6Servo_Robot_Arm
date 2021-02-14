@@ -7,6 +7,7 @@ from servo_player import *
 from controller_settings import *
 from servo_thread import*
 from xbox_controller import*
+from babylon_engine import *
 from time import sleep
 import os
 import math
@@ -43,6 +44,8 @@ class main_gui(QMainWindow):
 
         self.scene_arm_profile = QGraphicsScene(self)
         self.graphic_view_arm = QGraphicsView(self.scene_arm_profile, self)
+
+        self.web_engine = babylon_engine(self)
         
         # SETUP SERVO THREADS
         pi = pigpio.pi()
@@ -124,6 +127,9 @@ class main_gui(QMainWindow):
         self.layout_right_header.addWidget(self.check_lock_claw_angle, 2, 0)
 
         self.layout_main.addWidget(self.widget_profiles, 1, 0)
+
+        self.layout_main.addWidget(self.web_engine, 0, 1, 2, 1)
+
 
         # CUSTOM
         self.layout_main.setAlignment(Qt.AlignTop)
