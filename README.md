@@ -19,11 +19,12 @@ Come see it on [youtube](https://www.youtube.com/watch?v=-BNIDh299wI&feature=you
 
 <img width="800" alt="Failure to load image, open there" src="https://drive.google.com/uc?export=view&id=1lsptWAeE1047xdFiftxcgOpJheJEhI9M">
 <img width="800" alt="Failure to load image, open there" src="https://drive.google.com/uc?export=view&id=1kcNa3WQNZCbU3FKjx-0OkFhBEvRXbJol">
+<img width="800" alt="Failure to load image, open there" src="https://drive.google.com/uc?export=view&id=127qGV0QPSNlyTZfLWW5N1C6btYn8gtD3">
 
 ## To do :memo:
 - [X] Make the arm fully managed through an Xbox controller 
 - [X] Create a pattern builder
-- [ ] Possibility to lock the claw angle
+- [X] Possibility to lock the claw angle
 - [ ] Connect to arm to a Node.Js api, allowing remote control
 - [ ] Insert a 3D viewer in the interface
 
