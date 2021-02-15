@@ -6,19 +6,32 @@ from utils import *
 from confirm_button import *
 
 class presets_widget(QWidget):
-    def __init__(self, parent, new_player):
+    def __init__(self, parent, new_player, new_draw_surface):
         QWidget.__init__(self, parent)
         self.json_file = {}
         self.servo_positions = [0, 0, 0, 0, 0, 0]
         self.opened_preset = "Default"
         self.player = new_player
         self.opened_size_list = 0
+        self.draw_surface = new_draw_surface
+        self.play_parameters = {
+            "pause": False,
+            "pause_time": 0,
+            "reverse": False,
+            "loop": False,
+            "infinite": False, 
+            "loop_times": 2
+        }
 
         self.layout_main = QGridLayout(self)
 
         # PRESETS LIST
         self.layout_list = QGridLayout(self)
+        self.widget_presets_header = QWidget(self)
+        self.layout_presets_header = QGridLayout(self)
+        self.label_presets_icon = QLabel(self)
         self.label_presets_title = QLabel("Presets", self)
+
         self.button_new_perset = QPushButton("New", self)
         
         self.scroll_presets_list = QScrollArea(self)
@@ -27,7 +40,11 @@ class presets_widget(QWidget):
 
         # PRESET DETAILS
         self.layout_detail = QGridLayout(self)
+        self.widget_loaded_header = QWidget(self)
+        self.layout_loaded_header = QHBoxLayout(self)
+        self.label_loaded_icon = QLabel(self)
         self.lineedit_preset_name = QLineEdit("None", self)
+
         self.button_play = QPushButton("Play", self)
         self.button_trash = confirm_button(self, "Delete", "trash")
 
@@ -38,9 +55,30 @@ class presets_widget(QWidget):
         self.label_current_position = QLabel("000/000/000/000/000/000", self)
         self.button_add = QPushButton("Add", self)
 
+        # PARAMETERS
+        self.layout_parameters = QGridLayout(self)
+
+        self.widget_param_header = QWidget(self)
+        self.layout_param_header = QHBoxLayout(self)
+        self.label_parameters_icon = QLabel(self)
+        self.label_parameters_title = QLabel("Parameters", self)
+
+        self.check_box_pause = QCheckBox("Step Pause", self)
+        self.line_edit_pause_time = QLineEdit(str(self.play_parameters["pause_time"]), self)
+
+        self.check_box_reverse_play = QCheckBox("Reverse play", self)
+        self.group_box_loop = QGroupBox("Loop", self)
+        self.box_layout = QGridLayout(self)
+        self.check_box_infinite = QCheckBox("Infinite", self)
+        self.check_box_times = QCheckBox(self)
+        self.line_edit_loop_number = QLineEdit(str(self.play_parameters["loop_times"]), self)  
+
+        self.button_stop = QPushButton("Stop", self)
+
         self.build()
         self.load_presets()
         self.build_presets_list()
+        self.player.send_parameters(self.play_parameters)
         
         for key in self.json_file:
             self.opened_preset = key
@@ -55,8 +93,12 @@ class presets_widget(QWidget):
         # PRESETS LIST
         self.layout_main.addLayout(self.layout_list, 0, 0)
 
-        self.layout_list.addWidget(self.label_presets_title, 0, 0)
-        self.layout_list.addWidget(self.button_new_perset, 0, 1)
+        self.layout_list.addWidget(self.widget_presets_header, 0, 0)
+        self.widget_presets_header.setLayout(self.layout_presets_header)
+        self.layout_presets_header.addWidget(self.label_presets_icon, 0, 0)
+        self.layout_presets_header.addWidget(self.label_presets_title, 0, 1)
+        self.layout_presets_header.addWidget(self.button_new_perset, 0, 2)
+
         self.layout_list.addWidget(self.scroll_presets_list, 1, 0, 1, 2)
 
         self.scroll_presets_list.setWidget(self.widget_area)
@@ -64,15 +106,40 @@ class presets_widget(QWidget):
 
         # PRESET DETAILS
         self.layout_main.addLayout(self.layout_detail, 0, 1, 2, 1)
+        self.layout_detail.addWidget(self.widget_loaded_header, 0, 0, 1, 2)
+        self.widget_loaded_header.setLayout(self.layout_loaded_header)
+        self.layout_loaded_header.addWidget(self.label_loaded_icon)
+        self.layout_loaded_header.addWidget(self.lineedit_preset_name)
 
-        self.layout_detail.addWidget(self.lineedit_preset_name, 0, 0, 1, 2)
         self.layout_detail.addWidget(self.button_play, 1, 0)
         self.layout_detail.addWidget(self.button_trash, 1, 1)
+        self.layout_presets_header.setSpacing(15)
         self.layout_detail.addWidget(self.scroll_area_positions_list, 2, 0, 1, 2)
         self.scroll_area_positions_list.setWidget(self.widget_area_position)
         self.widget_area_position.setLayout(self.layout_area_position)
         self.layout_detail.addWidget(self.label_current_position, 3, 0)
         self.layout_detail.addWidget(self.button_add, 3, 1)
+
+        # PARALETERS BUILD
+        self.layout_main.addLayout(self.layout_parameters, 1, 0)
+        self.layout_parameters.addWidget(self.widget_param_header, 0, 0, 1, 2)
+        self.widget_param_header.setLayout(self.layout_param_header)
+        self.layout_param_header.addWidget(self.label_parameters_icon)
+        self.layout_param_header.addWidget(self.label_parameters_title)
+
+        self.layout_parameters.addWidget(self.check_box_pause, 1, 0)
+        self.layout_parameters.addWidget(self.line_edit_pause_time, 1, 1)
+        self.layout_parameters.addWidget(self.check_box_reverse_play, 2, 0, 1, 2)
+
+        self.layout_parameters.addWidget(self.group_box_loop, 3, 0, 1, 2)
+        self.group_box_loop.setLayout(self.box_layout)
+        self.box_layout.addWidget(self.check_box_infinite, 0, 0, 1, 2)
+        self.box_layout.addWidget(self.check_box_times, 1, 0)
+        self.box_layout.addWidget(self.line_edit_loop_number, 1, 1)
+
+        self.layout_parameters.addWidget(self.button_stop, 4, 0, 1, 2)
+
+        self.layout_parameters.addWidget(self.draw_surface, 0, 2, 4, 1)
 
         # PARAMETERS 
         self.scroll_presets_list.setWidgetResizable(True)
@@ -82,9 +149,27 @@ class presets_widget(QWidget):
         self.layout_area.setAlignment(Qt.AlignTop)
         self.layout_area_position.setAlignment(Qt.AlignTop)
         self.layout_main.setColumnStretch(0, 1)
-        self.layout_main.setColumnStretch(1, 2)
+        self.layout_main.setColumnStretch(1, 1)
+        self.layout_main.setRowStretch(0, 1)
+        self.layout_main.setRowStretch(1, 1)
+
+        self.layout_presets_header.setColumnStretch(1, 1)
+
+        #self.layout_presets_header.setContentsMargins(0, 0, 0, 0)
+        #self.button_new_perset.setStyleSheet("margin: 16px")
+        #self.label_presets_icon.setStyleSheet("padding: 16px")
+        #self.button_new_perset.setContextMenuPolicy(QSizePolicy.Expanding)
+
+        #self.layout_param_header.setContentsMargins(0, 0, 0, 0)
+        #self.layout_loaded_header.setContentsMargins(0, 0, 0, 0)
 
         utils.resize_and_font(self.label_presets_title, 1.5)
+        self.label_presets_icon.setPixmap(utils.get_resized_pixmap("list", 0.4))
+        self.widget_presets_header.setStyleSheet("background-color: #455a64")
+
+        utils.resize_and_font(self.lineedit_preset_name, 1.5)
+        self.label_loaded_icon.setPixmap(utils.get_resized_pixmap("line", 0.4))
+        self.widget_loaded_header.setStyleSheet("background-color: #455a64")
 
         utils.set_icon_resized(self.button_play, "play", 1)
         utils.set_icon_resized(self.button_add, "corner-arrow", 1)
@@ -94,9 +179,20 @@ class presets_widget(QWidget):
         utils.style_click_button(self.button_add, "#6a1b9a")
         utils.style_click_button(self.button_new_perset, "#ffa000")
 
+        self.label_parameters_icon.setPixmap(utils.get_resized_pixmap("play_settings", 0.4))
+        self.layout_parameters.setColumnStretch(0, 0)
+        self.layout_parameters.setColumnStretch(1, 1)
+        self.layout_parameters.setColumnStretch(2, 1)
         self.button_play.setCursor(Qt.PointingHandCursor)
         self.button_add.setCursor(Qt.PointingHandCursor)
         self.button_new_perset.setCursor(Qt.PointingHandCursor)
+        
+        self.widget_param_header.setStyleSheet("background-color: #455a64")
+        self.layout_param_header.setAlignment(Qt.AlignLeft)
+        utils.resize_and_font(self.label_parameters_title, 1.5)
+        self.group_box_loop.setCheckable(True)
+        self.group_box_loop.setChecked(False)
+        self.check_box_times.setChecked(True)
 
         self.lineedit_preset_name.setStyleSheet("border: 0px solid white; font-size: {0}px;".format(str(int(utils.get_resolution()[0] * 0.015))))
 
@@ -106,6 +202,16 @@ class presets_widget(QWidget):
         self.lineedit_preset_name.editingFinished.connect(self.update_preset_name)
         self.button_new_perset.clicked.connect(self.new_preset_clicked)
         self.button_trash.messager.clicked_valid.connect(self.delete_opened_preset)
+
+        # CONNECTIONS PARAMETERS
+        self.check_box_pause.stateChanged.connect(self.pause_state_changed)
+        self.line_edit_pause_time.editingFinished.connect(self.set_pause_value)
+        self.check_box_reverse_play.stateChanged.connect(self.reverse_state_changed)
+        self.group_box_loop.toggled.connect(self.toggle_loop)
+        self.check_box_infinite.stateChanged.connect(self.infinite_state_changed)
+        self.check_box_times.stateChanged.connect(self.loop_time_state_changed)
+        self.line_edit_loop_number.editingFinished.connect(self.set_loop_times)
+        self.button_stop.clicked.connect(self.stop_loop)
 
     def load_presets(self):
         try:
@@ -226,7 +332,7 @@ class presets_widget(QWidget):
         self.label_current_position.setText(text)
 
     def play_position(self):
-        self.player.play_new_sequence([self.json_file[self.opened_preset][int(self.sender().objectName())]])
+        self.player.go_to_position([self.json_file[self.opened_preset][int(self.sender().objectName())]])
 
     def play_sequence(self):
         self.player.play_new_sequence(self.json_file[self.opened_preset])
@@ -280,3 +386,46 @@ class presets_widget(QWidget):
                     return
             else:
                 self.new_preset_clicked()
+
+    
+    def pause_state_changed(self, state):
+        if state == 2:
+            self.play_parameters["pause"] = True
+        else:
+            self.play_parameters["pause"] = False
+
+    def set_pause_value(self):
+        self.play_parameters["pause_time"] = self.sender().text()
+
+    def reverse_state_changed(self, state):
+        if state == 2:
+            self.play_parameters["reverse"] = True
+        else:
+            self.play_parameters["reverse"] = False
+    
+    def infinite_state_changed(self, state):
+        if state == 2:
+            self.play_parameters["infinite"] = True
+            self.check_box_times.setChecked(False)
+        else:
+            self.play_parameters["infinite"] = False
+            self.check_box_times.setChecked(True)
+    
+
+    def loop_time_state_changed(self, state):
+        if state == 2:
+            self.check_box_infinite.setChecked(False)
+        else:
+            self.check_box_infinite.setChecked(True)
+    
+    def set_loop_times(self):
+        self.play_parameters["loop_times"] = self.sender().text()
+
+    def stop_loop(self):
+        if self.player.running:
+            self.player.stop = True
+
+    def toggle_loop(self, state_bool):
+        self.play_parameters["loop"] = state_bool
+
+        

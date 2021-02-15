@@ -28,7 +28,10 @@ class utils:
             "corner-arrow": self.scale_pixmap("./files/corner-arrow.png", reference_icon_size),
             "run": self.scale_pixmap("./files/run.png", reference_icon_size),
             "eraser": self.scale_pixmap("./files/eraser.png", reference_icon_size),
-            "reload": self.scale_pixmap("./files/reload.png", reference_icon_size)
+            "reload": self.scale_pixmap("./files/reload.png", reference_icon_size),
+            "play_settings": self.scale_pixmap("./files/play_settings.png", reference_icon_size),
+            "list": self.scale_pixmap("./files/list.png", reference_icon_size),
+            "line": self.scale_pixmap("./files/line.png", reference_icon_size)
         }
 
     def scale_pixmap(self, url, size_ref):

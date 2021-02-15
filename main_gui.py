@@ -7,7 +7,6 @@ from servo_player import *
 from controller_settings import *
 from servo_thread import*
 from xbox_controller import*
-from babylon_engine import *
 from time import sleep
 import os
 import math
@@ -44,8 +43,6 @@ class main_gui(QMainWindow):
 
         self.scene_arm_profile = QGraphicsScene(self)
         self.graphic_view_arm = QGraphicsView(self.scene_arm_profile, self)
-
-        self.web_engine = babylon_engine(self)
         
         # SETUP SERVO THREADS
         pi = pigpio.pi()
@@ -60,9 +57,9 @@ class main_gui(QMainWindow):
         self.thread_x = thread_axes(self, self.servo_1, self.servo_2, self.servo_3, True)
         self.player = servo_player(self, self.servo_0, self.servo_1, self.servo_2, self.servo_3, self.servo_4, self.servo_5)
 
-        self.widget_profiles = presets_widget(self, self.player)
+        self.widget_profiles = presets_widget(self, self.player, self.graphic_view_arm)
 
-        utils.window_resize_on_rez(self, 0.6, 0.6)
+        utils.window_resize_on_rez(self, 0.6, 0.7)
         self.build()
         self.update_heat()
         self.connections()
@@ -117,7 +114,6 @@ class main_gui(QMainWindow):
         self.layout_main.addLayout(self.layout_header, 0, 0)
         self.layout_header.addWidget(self.label_claw, 0, 0)
         self.layout_header.addWidget(self.label_title, 0, 1)
-        self.layout_header.addWidget(self.graphic_view_arm, 1, 0, 1, 2)
 
         self.layout_header.addLayout(self.layout_right_header, 0, 2, 2, 1)
         self.layout_right_header.addWidget(self.label_heat, 0, 0)
@@ -128,11 +124,10 @@ class main_gui(QMainWindow):
 
         self.layout_main.addWidget(self.widget_profiles, 1, 0)
 
-        self.layout_main.addWidget(self.web_engine, 0, 1, 2, 1)
-
 
         # CUSTOM
         self.layout_main.setAlignment(Qt.AlignTop)
+
         self.layout_header.setAlignment(Qt.AlignTop)
         utils.resize_and_font(self.label_title, 2.5)
         self.layout_right_header.setAlignment(Qt.AlignRight)
