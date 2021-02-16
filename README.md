@@ -25,7 +25,7 @@ Come see it on [youtube](https://www.youtube.com/watch?v=-BNIDh299wI&feature=you
 - [X] Make the arm fully managed through an Xbox controller 
 - [X] Create a pattern builder
 - [X] Possibility to lock the claw angle
-- [ ] Connect to arm to a Node.Js api, allowing remote control
-- [ ] Insert a 3D viewer in the interface
+- [ ] Connect he arm to a Node.Js api, allowing remote control and including 3D visualizer
+- [ ] Smoother control
 
 <img width="600" alt="Failure to load image, open there" src="https://drive.google.com/uc?export=view&id=1G144SaH336PP6PAeimX-bxtZagvuSLau">

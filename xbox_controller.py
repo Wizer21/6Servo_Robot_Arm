@@ -118,7 +118,7 @@ class xbox_controller(QThread):
                         elif event.type == ecodes.EV_ABS: 
                             # JOY 1
                             if code_button == self.joy1_x:
-                                if not 25767.5 < val_button < 39767.5:
+                                if not 22767.5 < val_button < 42767.5:
                                     if val_button < 32767.5:
                                         self.messager.robot_rotation.emit(-round((val_button - 32767.5) / 3276.75))
                                     else:
@@ -137,7 +137,7 @@ class xbox_controller(QThread):
 
                             # JOY 2
                             elif code_button == self.joy2_x:
-                                if not 25767.5 < val_button < 39767.5:
+                                if not 22767.5 < val_button < 42767.5:
                                     if val_button < 32767.5:
                                         self.messager.robot_rotation.emit(-round((val_button - 32767.5) / 3276.75))
                                     else:
