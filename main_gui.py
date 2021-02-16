@@ -142,6 +142,7 @@ class main_gui(QMainWindow):
         utils.resize_and_font(self.label_controller_name, 1.5)
         self.label_controller_name.setAlignment(Qt.AlignRight | Qt.AlignCenter)
         self.check_lock_claw_angle.setChecked(False)
+        self.menu_more.setCursor(Qt.PointingHandCursor)
 
 
     def ini_servo(self): 

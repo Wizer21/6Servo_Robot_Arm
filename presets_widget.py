@@ -163,6 +163,8 @@ class presets_widget(QWidget):
         #self.layout_param_header.setContentsMargins(0, 0, 0, 0)
         #self.layout_loaded_header.setContentsMargins(0, 0, 0, 0)
 
+
+
         utils.resize_and_font(self.label_presets_title, 1.5)
         self.label_presets_icon.setPixmap(utils.get_resized_pixmap("list", 0.4))
         self.widget_presets_header.setStyleSheet("background-color: #455a64")
@@ -193,6 +195,17 @@ class presets_widget(QWidget):
         self.group_box_loop.setCheckable(True)
         self.group_box_loop.setChecked(False)
         self.check_box_times.setChecked(True)
+
+        utils.resize_and_color_font(self.check_box_pause, 1, "#616161")
+        self.line_edit_pause_time.setStyleSheet("border: 0px solid white; color: #616161")
+        utils.resize_and_color_font(self.check_box_reverse_play, 1, "#616161")
+        self.toggle_loop(False)
+
+        self.check_box_pause.setCursor(Qt.PointingHandCursor)
+        self.check_box_reverse_play.setCursor(Qt.PointingHandCursor)
+        self.check_box_infinite.setCursor(Qt.PointingHandCursor)
+        self.check_box_times.setCursor(Qt.PointingHandCursor)
+        self.button_stop.setCursor(Qt.PointingHandCursor)
 
         self.lineedit_preset_name.setStyleSheet("border: 0px solid white; font-size: {0}px;".format(str(int(utils.get_resolution()[0] * 0.015))))
 
@@ -391,8 +404,12 @@ class presets_widget(QWidget):
     def pause_state_changed(self, state):
         if state == 2:
             self.play_parameters["pause"] = True
+            utils.resize_and_color_font(self.sender(), 1, "#ffffff")
+            self.line_edit_pause_time.setStyleSheet("border: 0px solid white; color: #ffffff")
         else:
             self.play_parameters["pause"] = False
+            utils.resize_and_color_font(self.sender(), 1, "#616161")
+            self.line_edit_pause_time.setStyleSheet("border: 0px solid white; color: #616161")
 
     def set_pause_value(self):
         self.play_parameters["pause_time"] = self.sender().text()
@@ -400,18 +417,23 @@ class presets_widget(QWidget):
     def reverse_state_changed(self, state):
         if state == 2:
             self.play_parameters["reverse"] = True
+            utils.resize_and_color_font(self.sender(), 1, "#ffffff")
         else:
             self.play_parameters["reverse"] = False
+            utils.resize_and_color_font(self.sender(), 1, "#616161")
     
     def infinite_state_changed(self, state):
         if state == 2:
             self.play_parameters["infinite"] = True
             self.check_box_times.setChecked(False)
+            utils.resize_and_color_font(self.sender(), 1, "#ffffff")
+            self.line_edit_loop_number.setStyleSheet("border: 0px solid white; color: #616161")
         else:
             self.play_parameters["infinite"] = False
             self.check_box_times.setChecked(True)
+            utils.resize_and_color_font(self.sender(), 1, "#616161")
+            self.line_edit_loop_number.setStyleSheet("border: 0px solid white; color: #ffffff")
     
-
     def loop_time_state_changed(self, state):
         if state == 2:
             self.check_box_infinite.setChecked(False)
@@ -427,5 +449,20 @@ class presets_widget(QWidget):
 
     def toggle_loop(self, state_bool):
         self.play_parameters["loop"] = state_bool
+        if not state_bool:
+            utils.resize_and_color_font(self.check_box_infinite, 1, "#616161")
+            self.line_edit_loop_number.setStyleSheet("border: 0px solid white; color: #616161")
+            utils.resize_and_color_font(self.group_box_loop, 1, "#616161")
+        else:
+            utils.resize_and_color_font(self.group_box_loop, 1, "#ffffff")
+            if self.check_box_infinite.isChecked():
+                utils.resize_and_color_font(self.check_box_infinite, 1, "#ffffff")
+                self.line_edit_loop_number.setStyleSheet("border: 0px solid white; color: #616161")
+            else:
+                utils.resize_and_color_font(self.check_box_infinite, 1, "#616161")
+                self.line_edit_loop_number.setStyleSheet("border: 0px solid white; color: #ffffff")
+
+
+
 
         
