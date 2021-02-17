@@ -7,6 +7,7 @@ from servo_player import *
 from controller_settings import *
 from servo_thread import*
 from xbox_controller import*
+from api_messager import *
 from time import sleep
 import os
 import math
@@ -22,6 +23,7 @@ class main_gui(QMainWindow):
         self.is_first_part_frontward = True
         self.second_part_front = True
         self.heatTimer = QTimer()
+        self.api_connector = api_messager(self)
 
         # WIDGETS
         self.bar = QMenuBar(self)
@@ -66,6 +68,9 @@ class main_gui(QMainWindow):
         self.ini_servo()
         self.draw_profile()
         self.controller.load_last_controller()
+
+        # TEST API
+        self.api_connector.send_pos("bit")
 
     def connections(self):
         # CONNECTIONS
