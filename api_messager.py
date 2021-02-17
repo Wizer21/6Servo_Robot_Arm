@@ -26,6 +26,8 @@ class api_messager(QThread):
             r = requests.get(self.url + self.data, timeout=5)
             print(r.text)
         except requests.exceptions.ReadTimeout as err:
+            print(err)        
+        except requests.exceptions.ConnectionError as err:
             print(err)
         
         self.running = False
