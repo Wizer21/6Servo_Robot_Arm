@@ -16,10 +16,12 @@ class servo_thread(QThread):
       self.messager = Communication()
 
       self.servo_position = 0
-      self.servo_action = 0
-      self.servo_quick_action = 0
       self.servo_running = False
+      self.servo_position_to_reach = 0
       self.pin = new_pin
+
+      self.joy_on = False
+      self.servo_action = 0 
 
       self.min_width = width_range[0]
       self.max_width = width_range[1]
@@ -105,13 +107,14 @@ class servo_thread(QThread):
    def quick_movement(self, position):
       if position != self.servo_position:
          
-         self.servo_quick_action = position
+         self.servo_position_to_reach = position
          self.servo_running = False
          self.quick = True
          self.start()
 
    def movement(self, action):
       self.servo_action = action
+      self.joy_on = True
 
       if not self.servo_running:
          self.servo_running = True
@@ -140,34 +143,39 @@ class servo_thread(QThread):
       self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
 
    def run(self):
-      if self.quick:
-         if not self.min_width <= self.servo_quick_action <= self.max_width:
-            print("OUT OF RANGE " + str(self.servo_quick_action))
+      self.servo_running = True
+      while self.servo_position_to_reach != self.servo_position and self.servo_running:
+         if self.quick:
+            if not self.min_width <= self.servo_position_to_reach <= self.max_width:
+               print("OUT OF RANGE " + str(self.servo_position_to_reach))
+               self.quick = False
+               return
+
+            if self.servo_position > self.servo_position_to_reach:
+               diff = self.servo_position - self.servo_position_to_reach
+            elif self.servo_position < self.servo_position_to_reach:
+               diff = self.servo_position_to_reach - self.servo_position
+            else:
+               self.quick = False
+               return
+
+            # 2000 width = 0.3s
+            sleep_time = diff / 1300
+
+            self.set_pulse_width(self.pin, self.servo_position_to_reach) 
+            # OPTIMIZE TIME
+            time.sleep(sleep_time)
+            self.servo_position = self.servo_position_to_reach
+
+
+            self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
+
             self.quick = False
-            return
+         else:                 
+            if self.joy_on:
 
-         if self.servo_position > self.servo_quick_action:
-            diff = self.servo_position - self.servo_quick_action
-         elif self.servo_position < self.servo_quick_action:
-            diff = self.servo_quick_action - self.servo_position
-         else:
-            self.quick = False
-            return
 
-         # 2000 width = 0.3s
-         sleep_time = diff / 1300
-
-         self.set_pulse_width(self.pin, self.servo_quick_action) 
-         # OPTIMIZE TIME
-         time.sleep(sleep_time)
-         self.servo_position = self.servo_quick_action
-
-         self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
-
-         self.quick = False
-      else:
-         while self.servo_running:
-            newpos = self.servo_position + self.servo_action
+            newpos = round(-(self.servo_position - self.servo_position_to_reach) / 10, 4)
             if not self.min_width <= newpos <= self.max_width:
                print("OUT OF RANGE " + str(newpos))
                self.servo_running = False
@@ -177,6 +185,7 @@ class servo_thread(QThread):
             time.sleep(0.01)
             self.servo_position = newpos
             self.messager.update_displayed_pos.emit(self.pin, self.servo_position)
-
+      self.joy_on
+      self.servo_running = False
 
 

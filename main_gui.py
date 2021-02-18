@@ -70,7 +70,7 @@ class main_gui(QMainWindow):
         self.controller.load_last_controller()
 
         # TEST API
-        self.api_connector.send_pos("bit")
+        self.api_connector.send_pos("test")
 
     def connections(self):
         # CONNECTIONS
