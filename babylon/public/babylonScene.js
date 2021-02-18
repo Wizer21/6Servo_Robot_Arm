@@ -11,10 +11,15 @@ const createScene =  () => {
     ground.material = backgroundMaterialGround;
 
 	//LOAD .OBJ
-	BABYLON.SceneLoader.ImportMesh("", "http://localhost:8080/models/", "arm.obj", scene, function (newMeshes, particleSystems, skeletons) {
+	BABYLON.SceneLoader.ImportMesh("", "http://localhost:8080/models/", "arm_rig.obj", scene, function (newMeshes, particleSystems, skeletons) {
+        console.log(newMeshes)
+        for (mesh in newMeshes){            
+            mesh.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+        }
+        console.log(skeletons)
         console.log(skeletons.bones)
         var arm = newMeshes[0];
-        arm.scaling = new BABYLON.Vector3(4, 4, 4);
+        //arm.scaling = new BABYLON.Vector3(1, 1, 1);
         arm.position = new BABYLON.Vector3(4, 4, 4);
 	});
 
