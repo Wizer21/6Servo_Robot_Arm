@@ -81,11 +81,13 @@ class thread_axes(QThread):
                 M3_degree = absolute_0 + self.absolute_claw_angle
 
                 M3_width = 640 + round(M3_degree / 0.10975)
-                print("AVERAGE VALUE ", str(round(M3_degree / 0.10975)))
-                print("M3_width", str(M3_width))
                 self.servo_3.direct_movement(M3_width)
                     
             # SET ARM POSITION
             self.servo_1.direct_movement(first_motor_width)
             self.servo_2.direct_movement(second_motor_width)
             self.parent.calc_arm_position()
+
+        self.servo_1.turn_off()
+        self.servo_2.turn_off()
+        self.servo_3.turn_off()

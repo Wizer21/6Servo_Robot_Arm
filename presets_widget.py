@@ -203,6 +203,7 @@ class presets_widget(QWidget):
 
         self.check_box_pause.setCursor(Qt.PointingHandCursor)
         self.check_box_reverse_play.setCursor(Qt.PointingHandCursor)
+        
         self.check_box_infinite.setCursor(Qt.PointingHandCursor)
         self.check_box_times.setCursor(Qt.PointingHandCursor)
         self.button_stop.setCursor(Qt.PointingHandCursor)

@@ -70,7 +70,7 @@ class main_gui(QMainWindow):
         self.controller.load_last_controller()
 
         # TEST API
-        self.api_connector.send_pos("test")
+        self.api_connector.send_pos("bit")
 
     def connections(self):
         # CONNECTIONS
@@ -179,12 +179,12 @@ class main_gui(QMainWindow):
         self.heatTimer.start(1000)
 
     def closeEvent(self, event):
-        self.servo_0.servo_running = False
-        self.servo_1.servo_running = False
-        self.servo_2.servo_running = False
-        self.servo_3.servo_running = False
-        self.servo_4.servo_running = False
-        self.servo_5.servo_running = False
+servo_position_to_reachewpos        self.servo_0.turn_off()
+        self.servo_1.turn_off()
+        self.servo_2.turn_off()
+        self.servo_3.turn_off()
+        self.servo_4.turn_off()
+        self.servo_5.turn_off()
 
         self.servo_0.quick_movement(1500)
         self.servo_1.quick_movement(1800)
@@ -209,14 +209,14 @@ class main_gui(QMainWindow):
         self.servo_5.movement(action)
     
     def stop_claw(self):
-        self.servo_5.servo_running = False
+        self.servo_5.turn_off()
         self.calc_arm_position()
 
     def rotate_claw(self, action):
         self.servo_4.movement(action)
     
     def stop_claw_rotation(self):
-        self.servo_4.servo_running = False
+        self.servo_4.turn_off()
         self.calc_arm_position()
 
     def move_y_claw(self, action):
@@ -228,7 +228,7 @@ class main_gui(QMainWindow):
             self.thread_y.absolute_claw_angle = pos
 
     def stop_y_claw(self):
-        self.servo_3.servo_running = False
+        self.servo_3.turn_off()
         if self.check_lock_claw_angle.isChecked():
             pos = self.update_claw_angle()
 
@@ -239,7 +239,7 @@ class main_gui(QMainWindow):
         self.servo_0.movement(action)
 
     def stop_rotation_robot(self):
-        self.servo_0.servo_running = False
+        self.servo_0.turn_off()
         self.calc_arm_position()
 
     def move_y_axis(self, action):
@@ -258,7 +258,7 @@ class main_gui(QMainWindow):
         pi_rad = math.pi / 180
 
         # TRIANGLE 1: X
-        width_1 = self.servo_1.servo_position
+        width_1 = self.servo_1.servo_position_to_reach
         first_degrees = 180 - (width_1 - 500) / 9.722222
 
         if first_degrees != 90:
@@ -289,7 +289,7 @@ class main_gui(QMainWindow):
             tri_1_y = 10.5
             tri_1_x = 0
 
-        width_2 = self.servo_2.servo_position
+        width_2 = self.servo_2.servo_position_to_reach
         degrees = 180 - (width_2 - 500) / 9.5555555
 
         back_angle = first_degrees - ((first_degrees - 90) * 2)
